@@ -247,6 +247,18 @@ function getEverArtWoodMaterialRate(product, option) {
   return option.price / lengthMeter;
 }
 
+function getBoardAreaFromSpec(product) {
+  const normalizedSpec = product.spec.replace(/,/g, "").trim();
+  const match = normalizedSpec.match(/(\d+)\s*x\s*(\d+)/i);
+  if (!match) {
+    return 1;
+  }
+
+  const widthMeter = Number(match[1]) / 1000;
+  const heightMeter = Number(match[2]) / 1000;
+  return widthMeter * heightMeter;
+}
+
 function getInstallRule(product, option) {
   if (product.category.startsWith("포세린 타일")) {
     const sizeKey = getTileSizeKey(product);
@@ -270,6 +282,7 @@ function getInstallRule(product, option) {
     if (product.name === "에버아트 우드 / EVERART WOOD") {
       const materialRate = getEverArtWoodMaterialRate(product, option);
       return {
+        available: true,
         ...fixedInstallRules[product.name],
         materialRatePerUnit: materialRate,
         materialUnitLabel: "m당 자재비"
@@ -353,6 +366,13 @@ function getMaterialAmount(product, option, quantity, installRule) {
   if (product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit) {
     return installRule.materialRatePerUnit * quantity;
   }
+
+  if (product.name === "에버아트 보드 / EVERART BOARD") {
+    const boardArea = getBoardAreaFromSpec(product);
+    const materialRatePerSquareMeter = option.price / boardArea;
+    return materialRatePerSquareMeter * quantity;
+  }
+
   return option.price * quantity;
 }
 
@@ -410,6 +430,10 @@ function updatePreview() {
 
   if (product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit) {
     previewPrice.textContent = `m당 자재비 · ${formatCurrency(installRule.materialRatePerUnit)}`;
+  } else if (product.name === "에버아트 보드 / EVERART BOARD") {
+    const boardArea = getBoardAreaFromSpec(product);
+    const materialRatePerSquareMeter = option.price / boardArea;
+    previewPrice.textContent = `m2당 자재비 · ${formatCurrency(materialRatePerSquareMeter)}`;
   } else {
     previewPrice.textContent = `${option.label} · ${formatCurrency(option.price)}`;
   }
@@ -540,6 +564,8 @@ addButton.addEventListener("click", () => {
     name: product.name,
     materialLabel: product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit
       ? `m당 자재비 ${formatCurrency(installRule.materialRatePerUnit)}`
+      : product.name === "에버아트 보드 / EVERART BOARD"
+        ? `m2당 자재비 ${formatCurrency(option.price / getBoardAreaFromSpec(product))}`
       : `${option.label} · ${formatCurrency(option.price)}`,
     installLabel: installToggle.checked && installMethod
       ? `${installMethod.label} · ${formatCurrency(installMethod.rate)}`
