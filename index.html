@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INO-EX 자재단가&시공단가 시뮬레이터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__eyebrow">INO-EX Material Pricing Suite</div>
+      <div class="hero__grid"></div>
+      <div class="hero__content">
+        <div class="hero__copy">
+          <p class="hero__kicker">자재비부터 먼저 정확하게</p>
+          <h1>INO-EX 자재단가&시공단가 시뮬레이터</h1>
+          <p class="hero__text">
+            이노EX 제품을 선택하고 소비자 단가 기준으로 자재비를 바로 계산할 수 있는 견적 시뮬레이터입니다.
+            현재는 자재비 계산에 집중하고, 시공비는 다음 단계에서 자연스럽게 확장할 수 있도록 준비해 두었습니다.
+          </p>
+          <div class="hero__badges">
+            <span>소비자 단가 기준</span>
+            <span>실시간 합산</span>
+            <span>시공비 확장 준비</span>
+          </div>
+        </div>
+        <aside class="hero__summary">
+          <div class="metric-card">
+            <span class="metric-card__label">선택 제품 수</span>
+            <strong class="metric-card__value" id="selectedCount">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-card__label">자재 합계</span>
+            <strong class="metric-card__value" id="materialTotalHero">0원</strong>
+          </div>
+          <div class="metric-card metric-card--muted">
+            <span class="metric-card__label">시공 합계</span>
+            <strong class="metric-card__value">추가 예정</strong>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel--form">
+        <div class="panel__header">
+          <div>
+            <p class="section-label">Step 1</p>
+            <h2>자재 선택</h2>
+          </div>
+          <p class="panel__hint">카테고리, 제품, 옵션, 수량을 선택해 자재비를 누적해보세요.</p>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>카테고리</span>
+            <select id="categorySelect"></select>
+          </label>
+          <label class="field">
+            <span>제품 선택</span>
+            <select id="productSelect"></select>
+          </label>
+          <label class="field">
+            <span>가격 옵션</span>
+            <select id="optionSelect"></select>
+          </label>
+          <label class="field">
+            <span id="quantityLabel">수량</span>
+            <input id="quantityInput" type="text" inputmode="decimal" value="1">
+          </label>
+        </div>
+
+        <div class="install-panel">
+          <div class="install-panel__row">
+            <div>
+              <p class="section-label">Step 1-1</p>
+              <h3>시공비 선택</h3>
+            </div>
+            <label class="toggle-line">
+              <input id="installToggle" type="checkbox">
+              <span>시공비 포함</span>
+            </label>
+          </div>
+          <div class="form-grid form-grid--install">
+            <label class="field">
+              <span>시공 방식 / 옵션</span>
+              <select id="installMethodSelect"></select>
+            </label>
+            <div class="install-note-card">
+              <span>시공 안내</span>
+              <strong id="installRatePreview">시공 없음</strong>
+              <p id="installNote">선택한 제품 기준으로 시공비를 함께 계산할 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="product-card" id="productCard">
+          <div class="product-card__head">
+            <div>
+              <p class="section-label">Product Preview</p>
+              <h3 id="previewName"></h3>
+            </div>
+            <div class="price-badge" id="previewPrice">0원</div>
+          </div>
+          <dl class="product-meta">
+            <div>
+              <dt>규격</dt>
+              <dd id="previewSpec"></dd>
+            </div>
+            <div>
+              <dt>포장 단위</dt>
+              <dd id="previewPackUnit"></dd>
+            </div>
+            <div>
+              <dt>단가 단위</dt>
+              <dd id="previewUnit"></dd>
+            </div>
+            <div>
+              <dt>리드타임</dt>
+              <dd id="previewLeadTime"></dd>
+            </div>
+            <div>
+              <dt>공급처</dt>
+              <dd id="previewSupplier"></dd>
+            </div>
+          </dl>
+          <div class="product-card__actions">
+            <div class="inline-total">
+              <span>예상 자재비</span>
+              <strong id="previewMaterialSubtotal">0원</strong>
+            </div>
+            <div class="inline-total inline-total--soft">
+              <span>예상 시공비</span>
+              <strong id="previewInstallSubtotal">0원</strong>
+            </div>
+            <div class="inline-total">
+              <span>예상 합계</span>
+              <strong id="previewSubtotal">0원</strong>
+            </div>
+            <button id="addButton" type="button">견적 리스트에 추가</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel panel--result">
+        <div class="panel__header">
+          <div>
+            <p class="section-label">Step 2</p>
+            <h2>견적 결과</h2>
+          </div>
+          <p class="panel__hint">자재비는 즉시 계산되고, 시공비는 이후 버전에서 더해질 수 있게 구성했습니다.</p>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <span>자재 합계</span>
+            <strong id="materialTotal">0원</strong>
+            <small>소비자 단가 기준</small>
+          </article>
+          <article class="summary-card">
+            <span>시공 합계</span>
+            <strong id="installTotal">0원</strong>
+            <small>선택 항목만 반영</small>
+          </article>
+          <article class="summary-card summary-card--accent">
+            <span>최종 예상 금액</span>
+            <strong id="grandTotal">0원</strong>
+            <small>자재비 + 시공비</small>
+          </article>
+        </div>
+
+        <div class="quote-tools">
+          <div class="install-flag">
+            <span>시공비 반영 방식</span>
+            <small>타일은 건식/습식 선택, 에버아트 우드는 m당 계산을 지원합니다.</small>
+          </div>
+          <div class="quote-actions">
+            <button id="printButton" class="ghost-button" type="button">인쇄 / PDF 저장</button>
+            <button id="resetButton" class="ghost-button" type="button">리스트 초기화</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>제품 정보</th>
+                <th>옵션 요약</th>
+                <th>수량</th>
+                <th>금액</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="quoteBody">
+              <tr class="empty-row">
+                <td colspan="5">아직 추가된 자재가 없습니다. 왼쪽에서 제품을 선택해 주세요.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="print-sheet" id="printSheet">
+          <div class="print-sheet__header">
+            <div>
+              <p class="section-label">Quote Sheet</p>
+              <h3>INO-EX 자재단가&시공단가 상세 견적서</h3>
+              <p class="print-sheet__meta" id="printDate"></p>
+            </div>
+            <div class="print-sheet__totals">
+              <div><span>자재 합계</span><strong id="printMaterialTotal">0원</strong></div>
+              <div><span>시공 합계</span><strong id="printInstallTotal">0원</strong></div>
+              <div><span>최종 합계</span><strong id="printGrandTotal">0원</strong></div>
+            </div>
+          </div>
+
+          <div class="print-table-wrap">
+            <table class="print-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>카테고리</th>
+                  <th>제품명</th>
+                  <th>자재 옵션</th>
+                  <th>시공 옵션</th>
+                  <th>수량</th>
+                  <th>자재비</th>
+                  <th>시공비</th>
+                  <th>합계</th>
+                </tr>
+              </thead>
+              <tbody id="printQuoteBody">
+                <tr class="empty-row">
+                  <td colspan="9">추가된 견적 항목이 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
