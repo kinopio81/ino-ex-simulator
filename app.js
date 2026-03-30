@@ -1,4 +1,4 @@
-const products = [
+﻿const products = [
   { category: "포세린 타일 / (이탈리아 MIRAGE)", name: "엘리지안 EY 07 / (트래버틴)", spec: "1,200x600x20T (0.72m2) / 32kg/box 44.4kg/m2", packUnit: "박스 당 1장", unit: "m2", leadTime: "약 3개월", supplier: "MIRAGE / (이탈리아)", options: [{ label: "기본", price: 120000 }] },
   { category: "포세린 타일 / (이탈리아 MIRAGE)", name: "노르 RR 09 / (자연석)", spec: "600x600x20T (0.36m2) / 32.33kg/box 44.9kg/m2", packUnit: "박스 당 2장", unit: "m2", leadTime: "약 3개월", supplier: "MIRAGE / (이탈리아)", options: [{ label: "기본", price: 110000 }] },
   { category: "포세린 타일 / (이탈리아 MIRAGE)", name: "콰지티 QR 02 / (샌드스톤)", spec: "600x600x20T (0.36m2) / 32.33kg/box 44.9kg/m2", packUnit: "박스 당 2장", unit: "m2", leadTime: "약 3개월", supplier: "MIRAGE / (이탈리아)", options: [{ label: "기본", price: 110000 }] },
@@ -47,6 +47,55 @@ const products = [
   { category: "익스테리어 상품 / (조경석)", name: "해미석", spec: "30mm / 40mm", packUnit: "1포", unit: "포", leadTime: "약 1주", supplier: "-", options: [{ label: "기본", price: 11200 }] },
   { category: "익스테리어 상품 / (조경석)", name: "개비온석", spec: "80~150mm", packUnit: "1톤", unit: "톤", leadTime: "약 1주", supplier: "-", options: [{ label: "기본", price: 336000 }] }
 ];
+
+const productImages = {
+  "엘리지안 EY 07 / (트래버틴)": "assets/products/image8.png",
+  "노르 RR 09 / (자연석)": "assets/products/image9.png",
+  "콰지티 QR 02 / (샌드스톤)": "assets/products/image10.png",
+  "글로컬 GC 02 / (콘크리트)": "assets/products/image11.png",
+  "글로컬 GC 03 / (콘크리트)": "assets/products/image12.png",
+  "오드 OU 02 / (우드)": "assets/products/image13.png",
+  "오드 OU 05 / (우드)": "assets/products/image14.png",
+  "길리안 GY 04 / (우드)": "assets/products/image15.png",
+  "엘리멘테 LABI": "assets/products/image16.png",
+  "엘리멘테 SABULA": "assets/products/image17.png",
+  "아스트라 FOG": "assets/products/image18.png",
+  "콰지티에 CENERE": "assets/products/image19.png",
+  "트라메 ORIENTALE": "assets/products/image20.png",
+  "트라메 CALEIDOSCOPIO": "assets/products/image21.png",
+  "루체 GOLD": "assets/products/image22.png",
+  "루체 SILVER": "assets/products/image23.png",
+  "스프레 수전 / 오르타포트": "assets/products/image24.png",
+  "라이언 수전 / 포트": "assets/products/image25.png",
+  "피노 수전 & 포트": "assets/products/image26.png",
+  "바루 수전 & 데미 포트": "assets/products/image27.png",
+  "크롬우체통 / 스탠드": "assets/products/image28.png",
+  "셰이드네트 / 삼각": "assets/products/image29.png",
+  "셰이드네트 / 사각": "assets/products/image30.png",
+  "셰이드용 기둥 1개 SET": "assets/products/Image 90.jpg",
+  "아트사인 4형": "assets/products/image32.png",
+  "아트사인 6형": "assets/products/image33.png",
+  "IKS 테이블": "assets/products/image34.png",
+  "IKS 벤치": "assets/products/image34.png",
+  "IKS 테이블(1EA) & 벤치(2EA) SET": "assets/products/image34.png",
+  "우드크리트": "assets/products/image35.png",
+  "연속형 벤치": "assets/products/image36.png",
+  "홈야드루프 / 글라스포치": "assets/products/image37.png",
+  "에버아트 우드 / EVERART WOOD": "assets/products/image38.png",
+  "노보월S": "assets/products/image39.png",
+  "월라이트": "assets/products/image40.png",
+  "스프레드 라이트": "assets/products/image41.png",
+  "익스프레스 미니 폴라이트": "assets/products/image42.png",
+  "에버아트 폴라이트": "assets/products/image43.png",
+  "가든 업라이트 미오": "assets/products/image44.png",
+  "도트리스 LED바": "assets/products/image45.png",
+  "12V 트랜스": "assets/products/image46.png",
+  "홈야드루프 / 카야드 스타일": "assets/products/image1.png",
+  "에버아트 보드 / EVERART BOARD": "assets/products/image4.jpeg",
+  "호피석": "assets/products/image6.png",
+  "해미석": "assets/products/image7.png",
+  "개비온석": "assets/products/image5.png"
+};
 
 const tileInstallRates = {
   "600x600": { dryPedestal: 67000, wetMortar: 70000 },
@@ -166,7 +215,15 @@ const installMethodSelect = document.querySelector("#installMethodSelect");
 const addButton = document.querySelector("#addButton");
 const printButton = document.querySelector("#printButton");
 const resetButton = document.querySelector("#resetButton");
-const quoteBody = document.querySelector("#quoteBody");
+const goBuilderButton = document.querySelector("#goBuilderButton");
+const goCartButton = document.querySelector("#goCartButton");
+const builderToCartButton = document.querySelector("#builderToCartButton");
+const backToBuilderButton = document.querySelector("#backToBuilderButton");
+const builderView = document.querySelector("#builderView");
+const cartView = document.querySelector("#cartView");
+const cartList = document.querySelector("#cartList");
+const cartEmpty = document.querySelector("#cartEmpty");
+const cartBadge = document.querySelector("#cartBadge");
 const printQuoteBody = document.querySelector("#printQuoteBody");
 
 const previewName = document.querySelector("#previewName");
@@ -179,6 +236,8 @@ const previewPrice = document.querySelector("#previewPrice");
 const previewMaterialSubtotal = document.querySelector("#previewMaterialSubtotal");
 const previewInstallSubtotal = document.querySelector("#previewInstallSubtotal");
 const previewSubtotal = document.querySelector("#previewSubtotal");
+const previewImage = document.querySelector("#previewImage");
+const previewImagePlaceholder = document.querySelector("#previewImagePlaceholder");
 const installRatePreview = document.querySelector("#installRatePreview");
 const installNote = document.querySelector("#installNote");
 
@@ -405,6 +464,34 @@ function updateInstallRatePreview() {
   installNote.textContent = installRule.note;
 }
 
+function getMaterialLabel(product, option, installRule) {
+  if (product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit) {
+    return `m당 자재비 · ${formatCurrency(installRule.materialRatePerUnit)}`;
+  }
+
+  if (product.name === "에버아트 보드 / EVERART BOARD") {
+    return `m2당 자재비 · ${formatCurrency(option.price / getBoardAreaFromSpec(product))}`;
+  }
+
+  return `${option.label} · ${formatCurrency(option.price)}`;
+}
+
+function renderPreviewImage(product) {
+  const imageSrc = productImages[product.name];
+  previewImage.alt = product.name;
+
+  if (!imageSrc) {
+    previewImage.hidden = true;
+    previewImage.removeAttribute("src");
+    previewImagePlaceholder.hidden = false;
+    return;
+  }
+
+  previewImage.hidden = false;
+  previewImagePlaceholder.hidden = true;
+  previewImage.src = imageSrc;
+}
+
 function updatePreview() {
   const product = getSelectedProduct();
   const option = getSelectedOption(product);
@@ -427,70 +514,73 @@ function updatePreview() {
   previewUnit.textContent = quantityMeta.unitText;
   previewLeadTime.textContent = product.leadTime;
   previewSupplier.textContent = product.supplier;
-
-  if (product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit) {
-    previewPrice.textContent = `m당 자재비 · ${formatCurrency(installRule.materialRatePerUnit)}`;
-  } else if (product.name === "에버아트 보드 / EVERART BOARD") {
-    const boardArea = getBoardAreaFromSpec(product);
-    const materialRatePerSquareMeter = option.price / boardArea;
-    previewPrice.textContent = `m2당 자재비 · ${formatCurrency(materialRatePerSquareMeter)}`;
-  } else {
-    previewPrice.textContent = `${option.label} · ${formatCurrency(option.price)}`;
-  }
+  previewPrice.textContent = getMaterialLabel(product, option, installRule);
 
   updateInstallRatePreview();
   previewMaterialSubtotal.textContent = formatCurrency(materialAmount);
   previewInstallSubtotal.textContent = formatCurrency(installAmount);
   previewSubtotal.textContent = formatCurrency(totalAmount);
+  renderPreviewImage(product);
 }
 
-function renderQuoteTable() {
+function renderCartBadge() {
+  cartBadge.textContent = String(quoteItems.length);
+  selectedCount.textContent = String(quoteItems.length);
+}
+
+function renderCartList() {
   if (!quoteItems.length) {
-    quoteBody.innerHTML = '<tr class="empty-row"><td colspan="5">아직 추가된 자재가 없습니다. 왼쪽에서 제품을 선택해 주세요.</td></tr>';
+    cartList.innerHTML = "";
+    cartEmpty.classList.add("is-visible");
     return;
   }
 
-  quoteBody.innerHTML = quoteItems.map((item, index) => `
-    <tr>
-      <td>
-        <div class="product-cell">
-          <span class="product-cell__category">${item.category}</span>
-          <strong class="product-cell__name">${item.name}</strong>
+  cartEmpty.classList.remove("is-visible");
+  cartList.innerHTML = quoteItems.map((item, index) => `
+    <article class="cart-item">
+      <div class="cart-item__media">
+        ${item.image
+          ? `<img src="${item.image}" alt="${item.name}">`
+          : `<div class="cart-item__placeholder">이미지 준비중</div>`}
+      </div>
+      <div>
+        <div class="cart-item__top">
+          <div>
+            <span class="pill">${item.category}</span>
+            <h3 class="cart-item__name">${item.name}</h3>
+          </div>
+          <button class="remove-button" type="button" data-index="${index}">삭제</button>
         </div>
-      </td>
-      <td>
-        <div class="option-cell">
-          <span class="option-chip">자재</span>
-          <div class="cell-sub">${item.materialLabel}</div>
-          <span class="option-chip">시공</span>
-          <div class="cell-sub">${item.installLabel}</div>
+        <div class="cart-item__meta">
+          <div><span>자재 옵션</span><strong>${item.materialLabel}</strong></div>
+          <div><span>시공 옵션</span><strong>${item.installLabel}</strong></div>
+          <div><span>규격</span><strong>${item.spec}</strong></div>
+          <div><span>수량</span><strong>${formatNumber(item.quantity)} ${item.quantityUnit}</strong></div>
         </div>
-      </td>
-      <td>
-        <strong>${formatNumber(item.quantity)}</strong>
-        <div class="cell-sub">${item.quantityUnit}</div>
-      </td>
-      <td>
-        <div class="amount-cell">
-          <div class="amount-line"><span>자재비</span><strong>${formatCurrency(item.materialAmount)}</strong></div>
-          <div class="amount-line"><span>시공비</span><strong>${formatCurrency(item.installAmount)}</strong></div>
-          <div class="amount-line amount-line--total"><span>합계</span><strong>${formatCurrency(item.totalAmount)}</strong></div>
-        </div>
-      </td>
-      <td><button class="table-remove" type="button" data-index="${index}">삭제</button></td>
-    </tr>
+      </div>
+      <div class="cart-item__amount">
+        <div><span>자재비</span><strong>${formatCurrency(item.materialAmount)}</strong></div>
+        <div><span>시공비</span><strong>${formatCurrency(item.installAmount)}</strong></div>
+        <div><span>합계</span><strong>${formatCurrency(item.totalAmount)}</strong></div>
+      </div>
+    </article>
   `).join("");
 }
 
 function renderPrintQuote() {
   if (!quoteItems.length) {
-    printQuoteBody.innerHTML = '<tr class="empty-row"><td colspan="9">추가된 견적 항목이 없습니다.</td></tr>';
+    printQuoteBody.innerHTML = '<tr class="empty-row"><td colspan="10">추가된 견적 항목이 없습니다.</td></tr>';
     return;
   }
 
   printQuoteBody.innerHTML = quoteItems.map((item, index) => `
     <tr>
       <td>${index + 1}</td>
+      <td>
+        ${item.image
+          ? `<img class="print-thumb" src="${item.image}" alt="${item.name}">`
+          : `<div class="print-thumb print-thumb--empty">-</div>`}
+      </td>
       <td>${item.category}</td>
       <td>${item.name}</td>
       <td>${item.materialLabel}</td>
@@ -509,20 +599,27 @@ function updateTotals() {
   const total = material + install;
 
   materialTotal.textContent = formatCurrency(material);
-  materialTotalHero.textContent = formatCurrency(material);
+  materialTotalHero.textContent = formatCurrency(total);
   installTotal.textContent = formatCurrency(install);
   grandTotal.textContent = formatCurrency(total);
-  selectedCount.textContent = String(quoteItems.length);
   printMaterialTotal.textContent = formatCurrency(material);
   printInstallTotal.textContent = formatCurrency(install);
   printGrandTotal.textContent = formatCurrency(total);
   printDate.textContent = `출력일시: ${new Date().toLocaleString("ko-KR")}`;
+  renderCartBadge();
+}
+
+function switchView(view) {
+  const showBuilder = view === "builder";
+  builderView.classList.toggle("view--active", showBuilder);
+  cartView.classList.toggle("view--active", !showBuilder);
+  goBuilderButton.classList.toggle("is-active", showBuilder);
 }
 
 function syncAll() {
   renderInstallMethods();
   updatePreview();
-  renderQuoteTable();
+  renderCartList();
   renderPrintQuote();
   updateTotals();
 }
@@ -562,11 +659,9 @@ addButton.addEventListener("click", () => {
   quoteItems.push({
     category: product.category,
     name: product.name,
-    materialLabel: product.name === "에버아트 우드 / EVERART WOOD" && installRule.materialRatePerUnit
-      ? `m당 자재비 ${formatCurrency(installRule.materialRatePerUnit)}`
-      : product.name === "에버아트 보드 / EVERART BOARD"
-        ? `m2당 자재비 ${formatCurrency(option.price / getBoardAreaFromSpec(product))}`
-      : `${option.label} · ${formatCurrency(option.price)}`,
+    spec: product.spec,
+    image: productImages[product.name] || "",
+    materialLabel: getMaterialLabel(product, option, installRule),
     installLabel: installToggle.checked && installMethod
       ? `${installMethod.label} · ${formatCurrency(installMethod.rate)}`
       : "미반영",
@@ -578,14 +673,15 @@ addButton.addEventListener("click", () => {
   });
 
   quantityInput.value = quantityMeta.step === 1 ? "1" : "0.1";
-  renderQuoteTable();
+  renderCartList();
+  renderPrintQuote();
   updateTotals();
   updatePreview();
 });
 
 resetButton.addEventListener("click", () => {
   quoteItems.length = 0;
-  renderQuoteTable();
+  renderCartList();
   renderPrintQuote();
   updateTotals();
   updatePreview();
@@ -597,20 +693,31 @@ printButton.addEventListener("click", () => {
   window.print();
 });
 
-quoteBody.addEventListener("click", (event) => {
+cartList.addEventListener("click", (event) => {
   const target = event.target;
-  if (!(target instanceof HTMLElement) || !target.matches(".table-remove")) {
+  if (!(target instanceof HTMLElement) || !target.matches(".remove-button")) {
     return;
   }
 
   const index = Number(target.dataset.index);
   quoteItems.splice(index, 1);
-  renderQuoteTable();
+  renderCartList();
   renderPrintQuote();
   updateTotals();
+});
+
+goBuilderButton.addEventListener("click", () => switchView("builder"));
+goCartButton.addEventListener("click", () => switchView("cart"));
+builderToCartButton.addEventListener("click", () => switchView("cart"));
+backToBuilderButton.addEventListener("click", () => switchView("builder"));
+
+previewImage.addEventListener("error", () => {
+  previewImage.hidden = true;
+  previewImagePlaceholder.hidden = false;
 });
 
 buildCategories();
 renderProductOptions();
 renderPriceOptions();
 syncAll();
+switchView("builder");

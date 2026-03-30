@@ -1,0 +1,8 @@
+::1 - - [30/Mar/2026 11:07:59] "GET / HTTP/1.1" 200 -
+::1 - - [30/Mar/2026 11:07:59] "GET /styles.css HTTP/1.1" 200 -
+::1 - - [30/Mar/2026 11:07:59] "GET /products-data.js HTTP/1.1" 200 -
+::1 - - [30/Mar/2026 11:07:59] "GET /app.js HTTP/1.1" 200 -
+::1 - - [30/Mar/2026 11:08:00] "GET /assets/products/image8.png HTTP/1.1" 200 -
+::1 - - [30/Mar/2026 11:08:00] code 404, message File not found
+::1 - - [30/Mar/2026 11:08:00] "GET /favicon.ico HTTP/1.1" 404 -
+::1 - - [30/Mar/2026 11:08:00] "GET / HTTP/1.1" 200 -
