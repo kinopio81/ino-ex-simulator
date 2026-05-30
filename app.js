@@ -34,6 +34,8 @@
   { category: "가든 액세사리 / (파고라)", name: "홈야드루프 / 글라스포치", spec: "W4000xL6000xH3000 / 3면 유리 포함", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 30408000 }] },
   { category: "가든 액세사리 / (내, 외장재)", name: "에버아트 보드 / EVERART BOARD", spec: "910x2440", packUnit: "1장", unit: "m2", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 336000 }] },
   { category: "가든 액세사리 / (내, 외장재, 독립재)", name: "에버아트 우드 / EVERART WOOD", spec: "75x75x1800 / 각재", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 138000 }] },
+  { category: "가든 액세사리 / (가든 휀스)", name: "센시아 휀스 / 세로 가는 격자", spec: "600x2000", packUnit: "1EA", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "기본", price: 270000 }] },
+  { category: "가든 액세사리 / (가든 휀스)", name: "센시아 휀스 / 가로 격자", spec: "600x2000", packUnit: "1EA", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "기본", price: 216000 }] },
   { category: "이노블록 월", name: "노보월S", spec: "500x250x150", packUnit: "-", unit: "EA", leadTime: "약 1개월", supplier: "자체생산", options: [{ label: "기본", price: 25000 }] },
   { category: "이노블록 월", name: "스테가월", spec: "394x250xH98 / 다각형 구조 / 1m2 = 13ea", packUnit: "-", unit: "EA", leadTime: "약 6개월", supplier: "고델만 / (독일)", options: [{ label: "기본", price: 25000 }] },
   { category: "익스테리어 상품 / (LED조명)", name: "월라이트", spec: "100x50x43 / 12V·24V / 1.8W", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 270000 }] },
@@ -57,8 +59,8 @@ const productImages = {
   "오드 OU 02 / (우드)": "assets/products/image13.png",
   "오드 OU 05 / (우드)": "assets/products/image14.png",
   "길리안 GY 04 / (우드)": "assets/products/image15.png",
-  "엘리멘테 LABI": "assets/products/image16.png",
-  "엘리멘테 SABULA": "assets/products/image17.png",
+  "엘리멘테 LABI": "assets/products/image17.png",
+  "엘리멘테 SABULA": "assets/products/image16.png",
   "아스트라 FOG": "assets/products/image18.png",
   "콰지티에 CENERE": "assets/products/image19.png",
   "트라메 ORIENTALE": "assets/products/image20.png",
@@ -82,6 +84,8 @@ const productImages = {
   "연속형 벤치": "assets/products/image36.png",
   "홈야드루프 / 글라스포치": "assets/products/image37.png",
   "에버아트 우드 / EVERART WOOD": "assets/products/image38.png",
+  "센시아 휀스 / 세로 가는 격자": "assets/products/sensia-fence-vertical.png",
+  "센시아 휀스 / 가로 격자": "assets/products/sensia-fence-horizontal.png",
   "노보월S": "assets/products/image39.png",
   "월라이트": "assets/products/image40.png",
   "스프레드 라이트": "assets/products/image41.png",
@@ -97,13 +101,66 @@ const productImages = {
   "개비온석": "assets/products/image5.png"
 };
 
-const tileInstallRates = {
-  "600x600": { dryPedestal: 67000, wetMortar: 70000 },
-  "1200x300": { dryPedestal: 85000, wetMortar: 70000 },
-  "1200x600": { dryPedestal: 67000, wetMortar: 70000 },
-  "1000x1000": { dryPedestal: 65000, wetMortar: 70000 },
-  "1200x1200": { dryPedestal: 70000, wetMortar: 70000 }
+const proposalCaseImages = {
+  "엘리지안 EY 07 / (트래버틴)": ["assets/cases/case-04-1.png", "assets/cases/case-04-2.png"],
+  "노르 RR 09 / (자연석)": ["assets/cases/case-05-1.png", "assets/cases/case-05-2.png"],
+  "콰지티 QR 02 / (샌드스톤)": ["assets/cases/case-06-1.png", "assets/cases/case-06-2.png"],
+  "글로컬 GC 02 / (콘크리트)": ["assets/cases/case-07-2.png"],
+  "글로컬 GC 03 / (콘크리트)": ["assets/cases/case-08-1.png", "assets/cases/case-08-2.png"],
+  "오드 OU 02 / (우드)": ["assets/cases/case-09-1.png", "assets/cases/case-09-2.png"],
+  "오드 OU 05 / (우드)": ["assets/cases/case-10-1.png", "assets/cases/case-10-2.png"],
+  "길리안 GY 04 / (우드)": ["assets/cases/case-11-1.png", "assets/cases/case-11-2.png"],
+  "엘리멘테 LABI": ["assets/cases/case-12-1.png", "assets/cases/case-12-2.png"],
+  "엘리멘테 SABULA": ["assets/cases/case-13-1.png", "assets/cases/case-13-2.png"],
+  "아스트라 FOG": ["assets/cases/case-14-1.png", "assets/cases/case-14-2.png"],
+  "콰지티에 CENERE": ["assets/cases/case-15-1.png", "assets/cases/case-15-2.png"],
+  "트라메 ORIENTALE": ["assets/cases/case-16-2.png"],
+  "트라메 CALEIDOSCOPIO": ["assets/cases/case-17-2.png"],
+  "루체 GOLD": ["assets/cases/case-18-1.png", "assets/cases/case-18-2.png"],
+  "루체 SILVER": ["assets/cases/case-19-1.png", "assets/cases/case-19-2.png"],
+  "스프레 수전 / 오르타포트": ["assets/cases/case-20-2.png"],
+  "라이언 수전 / 포트": ["assets/cases/case-21-1.png", "assets/cases/case-21-2.png"],
+  "피노 수전 & 포트": ["assets/cases/case-22-1.png"],
+  "바루 수전 & 데미 포트": ["assets/cases/case-23-1.png"],
+  "크롬우체통 / 스탠드": ["assets/cases/case-24-1.png"],
+  "셰이드네트 / 사각": ["assets/cases/case-25-1.png"],
+  "셰이드네트 / 삼각": ["assets/cases/case-27-1.png"],
+  "셰이드용 기둥 1개 SET": ["assets/cases/case-29-1.png"],
+  "아트사인 4형": ["assets/cases/case-31-1.png"],
+  "아트사인 6형": ["assets/cases/case-32-1.png"],
+  "우드크리트": ["assets/cases/case-33-1.png", "assets/cases/case-33-2.png"],
+  "IKS 테이블": ["assets/cases/case-35-1.png", "assets/cases/case-35-2.png"],
+  "IKS 벤치": ["assets/cases/case-35-1.png", "assets/cases/case-35-2.png"],
+  "IKS 테이블(1EA) & 벤치(2EA) SET": ["assets/cases/case-35-1.png", "assets/cases/case-35-2.png"],
+  "연속형 벤치": ["assets/cases/case-37-2.png"],
+  "홈야드루프 / 카야드 스타일": ["assets/cases/case-38-1.png", "assets/cases/case-38-2.png"],
+  "홈야드루프 / 글라스포치": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
+  "에버아트 보드 / EVERART BOARD": ["assets/cases/case-42-1.png", "assets/cases/case-42-2.png"],
+  "에버아트 우드 / EVERART WOOD": ["assets/cases/case-43-1.png", "assets/cases/case-43-2.png"],
+  "센시아 휀스 / 세로 가는 격자": ["assets/cases/case-45-2.png"],
+  "센시아 휀스 / 가로 격자": ["assets/cases/case-46-1.png", "assets/cases/case-46-2.png"],
+  "노보월S": ["assets/cases/case-47-1.png", "assets/cases/case-47-2.png"],
+  "월라이트": ["assets/cases/case-49-1.png"],
+  "스프레드 라이트": ["assets/cases/case-50-1.png"],
+  "익스프레스 미니 폴라이트": ["assets/cases/case-51-1.png"],
+  "에버아트 폴라이트": ["assets/cases/case-52-1.png", "assets/cases/case-52-2.png"],
+  "가든 업라이트 미오": ["assets/cases/case-53-1.png", "assets/cases/case-53-2.png"],
+  "도트리스 LED바": ["assets/cases/case-54-1.png"],
+  "12V 트랜스": ["assets/cases/case-55-1.png"],
+  "호피석": ["assets/cases/case-56-1.png"],
+  "해미석": ["assets/cases/case-57-1.png"],
+  "개비온석": ["assets/cases/case-58-1.png"]
 };
+
+const tileInstallRates = {
+  "600x600": { dryPedestal: 67000, floorFrame: 85000, wetMortar: 70000 },
+  "1200x300": { dryPedestal: 85000, floorFrame: 85000, wetMortar: 70000 },
+  "1200x600": { dryPedestal: 67000, floorFrame: 85000, wetMortar: 70000 },
+  "1000x1000": { dryPedestal: 65000, floorFrame: 85000, wetMortar: 70000 },
+  "1200x1200": { dryPedestal: 70000, floorFrame: 85000, wetMortar: 70000 }
+};
+
+const fencePanelLengthMeter = 2;
 
 const fixedInstallRules = {
   "스프레 수전 / 오르타포트": {
@@ -182,6 +239,16 @@ const fixedInstallRules = {
     kind: "length",
     methods: [{ id: "wood_install", label: "우드 시공", rate: 15000, unitLabel: "m당 시공비" }],
     note: "에버아트 우드는 간격에 따라 m당 자재비와 m당 시공비 기준으로 계산됩니다."
+  },
+  "센시아 휀스 / 세로 가는 격자": {
+    kind: "length",
+    methods: [{ id: "sensia_fence_install", label: "휀스 시공", rate: 100000, unitLabel: "m당 시공비" }],
+    note: "센시아 휀스는 입력 길이를 기준으로 자재 수량과 m당 시공비를 계산합니다."
+  },
+  "센시아 휀스 / 가로 격자": {
+    kind: "length",
+    methods: [{ id: "sensia_fence_install", label: "휀스 시공", rate: 100000, unitLabel: "m당 시공비" }],
+    note: "센시아 휀스는 입력 길이를 기준으로 자재 수량과 m당 시공비를 계산합니다."
   }
 };
 
@@ -214,13 +281,19 @@ const installToggle = document.querySelector("#installToggle");
 const installMethodSelect = document.querySelector("#installMethodSelect");
 const addButton = document.querySelector("#addButton");
 const printButton = document.querySelector("#printButton");
+const proposalPrintButton = document.querySelector("#proposalPrintButton");
 const resetButton = document.querySelector("#resetButton");
 const goBuilderButton = document.querySelector("#goBuilderButton");
 const goCartButton = document.querySelector("#goCartButton");
+const goProposalButton = document.querySelector("#goProposalButton");
 const builderToCartButton = document.querySelector("#builderToCartButton");
 const backToBuilderButton = document.querySelector("#backToBuilderButton");
+const cartToProposalButton = document.querySelector("#cartToProposalButton");
+const proposalToBuilderButton = document.querySelector("#proposalToBuilderButton");
+const proposalToCartButton = document.querySelector("#proposalToCartButton");
 const builderView = document.querySelector("#builderView");
 const cartView = document.querySelector("#cartView");
+const proposalView = document.querySelector("#proposalView");
 const cartList = document.querySelector("#cartList");
 const cartEmpty = document.querySelector("#cartEmpty");
 const cartBadge = document.querySelector("#cartBadge");
@@ -250,8 +323,13 @@ const printMaterialTotal = document.querySelector("#printMaterialTotal");
 const printInstallTotal = document.querySelector("#printInstallTotal");
 const printGrandTotal = document.querySelector("#printGrandTotal");
 const printDate = document.querySelector("#printDate");
+const proposalBody = document.querySelector("#proposalBody");
+const proposalDate = document.querySelector("#proposalDate");
+const proposalItemCount = document.querySelector("#proposalItemCount");
+const proposalGrandTotal = document.querySelector("#proposalGrandTotal");
 
 const quoteItems = [];
+let proposalCaseIndex = 0;
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ko-KR").format(Math.round(value)) + "원";
@@ -260,6 +338,15 @@ function formatCurrency(value) {
 function formatNumber(value) {
   const rounded = Number.isInteger(value) ? value : Number(value.toFixed(2));
   return new Intl.NumberFormat("ko-KR").format(rounded);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function parseQuantityValue(rawValue, fallback) {
@@ -306,6 +393,14 @@ function getEverArtWoodMaterialRate(product, option) {
   return option.price / lengthMeter;
 }
 
+function isSensiaFence(product) {
+  return product.name.startsWith("센시아 휀스");
+}
+
+function getSensiaFencePanelCount(lengthMeter) {
+  return Math.max(1, Math.ceil(lengthMeter / fencePanelLengthMeter));
+}
+
 function getBoardAreaFromSpec(product) {
   const normalizedSpec = product.spec.replace(/,/g, "").trim();
   const match = normalizedSpec.match(/(\d+)\s*x\s*(\d+)/i);
@@ -330,10 +425,15 @@ function getInstallRule(product, option) {
       available: true,
       kind: "area",
       methods: [
-        { id: "dry_pedestal", label: "건식(페데스탈)", rate: rates.dryPedestal, unitLabel: "m2당 시공비" },
-        { id: "wet_mortar", label: "습식(몰탈 압착)", rate: rates.wetMortar, unitLabel: "m2당 시공비" }
+        { id: "dry_pedestal", label: "바닥 건식(페데스탈)", rate: rates.dryPedestal, unitLabel: "m2당 시공비" },
+        { id: "floor_frame", label: "바닥 각관 공사", rate: rates.floorFrame, unitLabel: "m2당 시공비" },
+        { id: "wet_mortar", label: "바닥 습식(몰탈 압착)", rate: rates.wetMortar, unitLabel: "m2당 시공비" },
+        { id: "wall_dry", label: "담장 건식(각관+연결철물)", rate: 290000, unitLabel: "m2당 시공비" },
+        { id: "wall_wet", label: "담장 습식(각관+습식부착)", rate: 240000, unitLabel: "m2당 시공비" },
+        { id: "facade_dry", label: "벽체 건식(연결철물)", rate: 150000, unitLabel: "m2당 시공비" },
+        { id: "facade_wet", label: "벽체 습식(습식부착)", rate: 100000, unitLabel: "m2당 시공비" }
       ],
-      note: "타일은 페데스탈을 이용한 건식공법과 몰탈 압착 습식공법 중에서 선택할 수 있습니다."
+      note: "타일은 바닥, 담장, 벽체 공사 방식에 맞춰 시공비를 선택할 수 있습니다."
     };
   }
 
@@ -403,6 +503,10 @@ function getQuantityMeta(product, option) {
     return { label: "길이(m)", min: 0.1, step: 0.1, unitText: "m" };
   }
 
+  if (isSensiaFence(product)) {
+    return { label: "길이(m)", min: 0.1, step: 0.1, unitText: "m" };
+  }
+
   if (installRule.kind === "area" || product.unit.includes("m2")) {
     return { label: "면적(m2)", min: 0.1, step: 0.1, unitText: "m2" };
   }
@@ -430,6 +534,10 @@ function getMaterialAmount(product, option, quantity, installRule) {
     const boardArea = getBoardAreaFromSpec(product);
     const materialRatePerSquareMeter = option.price / boardArea;
     return materialRatePerSquareMeter * quantity;
+  }
+
+  if (isSensiaFence(product)) {
+    return getSensiaFencePanelCount(quantity) * option.price;
   }
 
   return option.price * quantity;
@@ -471,6 +579,10 @@ function getMaterialLabel(product, option, installRule) {
 
   if (product.name === "에버아트 보드 / EVERART BOARD") {
     return `m2당 자재비 · ${formatCurrency(option.price / getBoardAreaFromSpec(product))}`;
+  }
+
+  if (isSensiaFence(product)) {
+    return `${option.label} · ${formatCurrency(option.price)} / 1EA(길이 ${fencePanelLengthMeter}m)`;
   }
 
   return `${option.label} · ${formatCurrency(option.price)}`;
@@ -593,10 +705,287 @@ function renderPrintQuote() {
   `).join("");
 }
 
-function updateTotals() {
+function getQuoteTotals() {
   const material = quoteItems.reduce((sum, item) => sum + item.materialAmount, 0);
   const install = quoteItems.reduce((sum, item) => sum + item.installAmount, 0);
-  const total = material + install;
+  return {
+    material,
+    install,
+    total: material + install
+  };
+}
+
+function getProposalInsights() {
+  const hasTile = quoteItems.some((item) => item.category.includes("포세린 타일"));
+  const hasWater = quoteItems.some((item) => item.category.includes("수전"));
+  const hasShade = quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치") || item.name.includes("카야드"));
+  const hasSeating = quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치"));
+  const hasWoodcrete = quoteItems.some((item) => item.name.includes("우드크리트"));
+  const hasLighting = quoteItems.some((item) => item.category.includes("LED조명"));
+  const hasFence = quoteItems.some((item) => item.name.includes("센시아 휀스"));
+  const hasWallMaterial = quoteItems.some((item) => item.name.includes("에버아트") || item.name.includes("노보월") || item.name.includes("스테가월"));
+  const hasStone = quoteItems.some((item) => item.category.includes("조경석"));
+  const hasMailOrSign = quoteItems.some((item) => item.category.includes("우체통") || item.category.includes("명패"));
+  const hasWoodTone = quoteItems.some((item) => item.name.includes("우드") || item.name.includes("우드크리트") || item.name.includes("EVERART WOOD"));
+  const hasTravertineTone = quoteItems.some((item) => item.name.includes("트래버틴") || item.name.includes("엘리멘테") || item.name.includes("SABULA") || item.name.includes("LABI"));
+  const hasConcreteTone = quoteItems.some((item) => item.name.includes("글로컬") || item.name.includes("콘크리트") || item.name.includes("CENERE") || item.name.includes("FOG"));
+
+  const insights = [];
+
+  if (hasTile && hasShade && (hasSeating || hasWater)) {
+    insights.push({
+      kicker: "Courtyard Composition",
+      title: "바닥, 그늘, 사물이 만드는 작은 중정",
+      copy: "대형 포세린 타일을 조용한 바탕으로 깔고, 그늘 구조물과 수전·벤치를 하나의 생활 장면으로 묶는 구성입니다. 재료는 절제하되 체류 기능을 분명히 두어, 주택 정원이나 커뮤니티 공간이 단순한 외부 마감이 아니라 머무는 마당처럼 읽히게 합니다."
+    });
+  }
+
+  if (hasTile && hasShade) {
+    insights.push({
+      kicker: "Shade & Ground",
+      title: "그늘 아래에서 완성되는 포장면의 깊이",
+      copy: "포세린 타일의 수평면 위에 파고라나 셰이드를 더하면 빛과 그림자가 공간의 표정을 만듭니다. 낮에는 부드러운 음영이 질감을 살리고, 계절에 따라 야외 테이블·휴식·정원 관리가 가능한 반외부 공간으로 확장됩니다."
+    });
+  }
+
+  if (hasTile && hasWater) {
+    insights.push({
+      kicker: "Water Point",
+      title: "정원 관리 동선을 드러내지 않는 수전 포인트",
+      copy: "수전은 기능 설비이지만, 바닥 재료와 함께 계획하면 공간의 작은 오브제가 됩니다. 포세린 타일의 단단한 질감 위에 수전과 포트를 정리하면 세척·관수 동선이 자연스럽게 숨고, 물을 쓰는 영역도 깔끔한 장면으로 남습니다."
+    });
+  }
+
+  if (hasTile && hasSeating) {
+    insights.push({
+      kicker: "Social Edge",
+      title: "포장 끝에 놓이는 머무름의 가구",
+      copy: "IKS 테이블과 벤치는 포장면의 가장자리나 식재가 열리는 지점에 놓였을 때 가장 자연스럽습니다. 단단한 바닥, 낮은 식재, 시선이 머무는 가구가 함께 구성되면 공동주택 라운지나 정원 테라스에 차분한 체류감이 생깁니다."
+    });
+  }
+
+  if (hasWoodcrete) {
+    insights.push({
+      kicker: "Garden Walk",
+      title: "정원 안쪽으로 천천히 유도하는 보행 리듬",
+      copy: "우드크리트는 직선 포장보다 느슨한 보행감을 만들기 좋습니다. 자갈·잔디·초화 사이에 불규칙한 간격으로 배치하면 사용자의 속도가 자연스럽게 낮아지고, 정원은 통과하는 곳이 아니라 산책하며 감상하는 공간으로 바뀝니다."
+    });
+  }
+
+  if (hasLighting) {
+    insights.push({
+      kicker: "Night Layer",
+      title: "밤의 윤곽을 만드는 낮은 조도 계획",
+      copy: "조명은 밝히기보다 윤곽을 남기는 방식이 좋습니다. 벽면, 식재 하부, 계단, 벤치 주변에 낮은 조도의 빛을 분산하면 안전성은 확보하면서도 호텔 라운지처럼 조용하고 깊이 있는 야간 경관을 만들 수 있습니다."
+    });
+  }
+
+  if (hasFence) {
+    insights.push({
+      kicker: "Soft Boundary",
+      title: "막지 않고 정리하는 얇은 경계",
+      copy: "센시아 휀스는 공간을 강하게 차단하기보다 선을 정돈하는 요소로 쓰기 좋습니다. 낮은 식재와 함께 배치하면 시야는 열어두면서도 사적 영역과 공용 영역이 섬세하게 구분되고, 정원의 배경이 한층 정돈됩니다."
+    });
+  }
+
+  if (hasWallMaterial && hasTile) {
+    insights.push({
+      kicker: "Monolithic Surface",
+      title: "바닥과 벽을 하나의 덩어리처럼 연결",
+      copy: "포세린 타일과 에버아트·월 자재를 함께 쓰면 바닥과 입면이 분리되지 않고 하나의 매스로 읽힙니다. 과한 장식보다 면의 비례와 줄눈 정렬을 강조하면 고급 주거의 차분한 기념비성이 살아납니다."
+    });
+  }
+
+  if (hasStone && (hasTile || hasWoodcrete)) {
+    insights.push({
+      kicker: "Textural Contrast",
+      title: "정제된 포장과 거친 자연 질감의 대비",
+      copy: "포세린 타일이나 우드크리트처럼 정돈된 재료 옆에 조경석을 두면 공간이 지나치게 평면적으로 보이지 않습니다. 매끈한 면과 거친 입자의 대비가 식재의 자연성을 끌어올리고, 작은 정원도 깊이감 있게 보입니다."
+    });
+  }
+
+  if (hasMailOrSign) {
+    insights.push({
+      kicker: "First Impression",
+      title: "입구에서 시작되는 브랜드의 첫 장면",
+      copy: "우체통과 명패는 작은 요소지만 공간의 첫 인상을 결정합니다. 벽체, 포장, 식재의 색을 절제하고 포인트 사인을 정확한 높이에 배치하면 외부 공간 전체가 더 정돈되고 의도적인 인상을 줍니다."
+    });
+  }
+
+  if (hasWoodTone && hasConcreteTone) {
+    insights.push({
+      kicker: "Warm Minimal",
+      title: "콘크리트의 절제감 위에 더하는 목질감",
+      copy: "콘크리트 톤 타일이나 회색 계열 자재는 공간을 정돈하지만 차갑게 느껴질 수 있습니다. 우드 계열 제품을 동선이나 포인트 구조로 더하면 미니멀한 바탕 위에 따뜻한 촉감이 생겨 균형 잡힌 외부 공간이 됩니다."
+    });
+  }
+
+  if (hasTravertineTone) {
+    insights.push({
+      kicker: "Quiet Luxury",
+      title: "밝은 석재 톤으로 만드는 부드러운 고급감",
+      copy: "트래버틴·샌드 계열의 밝은 포세린은 빛을 부드럽게 받아 작은 외부 공간도 넓고 온화하게 보이게 합니다. 식재의 녹색, 흰색 구조물, 수전 금속 질감과 함께 쓰면 리조트처럼 차분한 분위기를 만들 수 있습니다."
+    });
+  }
+
+  if (!insights.length && quoteItems.length) {
+    insights.push({
+      kicker: "INO-EX Curation",
+      title: "선택 제품의 질감과 기능을 중심으로 한 외부공간 제안",
+      copy: "선택한 제품의 소재감, 색상, 사용 목적을 기준으로 공간의 첫 인상과 체류 장면을 함께 정리한 제안입니다. 현장 조건에 따라 배수, 고정 방식, 조명, 유지관리 계획을 더하면 완성도 높은 외부공간으로 확장할 수 있습니다."
+    });
+  }
+
+  return insights.slice(0, 4);
+}
+
+function getCaseExamplesForItem(item) {
+  const images = proposalCaseImages[item.name] || [];
+  return images.map((image, index) => ({
+    title: `${item.name} 시공사례 ${index + 1}`,
+    image,
+    copy: "",
+    productName: item.name,
+    category: item.category
+  }));
+}
+
+function getProposalCases() {
+  const seen = new Set();
+  return quoteItems
+    .flatMap(getCaseExamplesForItem)
+    .filter((example) => {
+      const key = `${example.image}-${example.productName}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function getProposalMaterialTags() {
+  const tags = [];
+  const addTag = (condition, label) => {
+    if (condition && !tags.includes(label)) tags.push(label);
+  };
+
+  addTag(quoteItems.some((item) => item.category.includes("포세린 타일")), "Porcelain Surface");
+  addTag(quoteItems.some((item) => item.category.includes("수전")), "Water Object");
+  addTag(quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치")), "Shade Structure");
+  addTag(quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치")), "Outdoor Living");
+  addTag(quoteItems.some((item) => item.category.includes("LED조명")), "Low Light");
+  addTag(quoteItems.some((item) => item.name.includes("우드") || item.name.includes("우드크리트")), "Warm Texture");
+  addTag(quoteItems.some((item) => item.name.includes("센시아 휀스")), "Soft Boundary");
+  addTag(quoteItems.some((item) => item.category.includes("조경석")), "Natural Aggregate");
+
+  return tags.slice(0, 6);
+}
+
+function renderProposal() {
+  const totals = getQuoteTotals();
+  proposalDate.textContent = `작성일시: ${new Date().toLocaleString("ko-KR")}`;
+  proposalItemCount.textContent = `${quoteItems.length}개`;
+  proposalGrandTotal.textContent = formatCurrency(totals.total);
+
+  if (!quoteItems.length) {
+    proposalBody.innerHTML = `
+      <div class="proposal-empty">
+        장바구니에 담긴 제품이 없습니다. Step 1에서 제품을 추가하면 조합 제안서가 생성됩니다.
+      </div>
+    `;
+    return;
+  }
+
+  const insights = getProposalInsights();
+  const [featuredInsight, ...supportInsights] = insights;
+  const materialTags = getProposalMaterialTags();
+  const cases = getProposalCases();
+  proposalCaseIndex = cases.length ? Math.min(proposalCaseIndex, cases.length - 1) : 0;
+  const currentCase = cases[proposalCaseIndex];
+
+  proposalBody.innerHTML = `
+    <section class="proposal-section proposal-section--direction">
+      <div class="proposal-section__title">
+        <div>
+          <span>Design Direction</span>
+          <h4>조합 제안 방향</h4>
+        </div>
+      </div>
+
+      <div class="proposal-direction">
+        <article class="proposal-insight proposal-insight--featured">
+          <div class="proposal-insight__index">01</div>
+          <span>${escapeHtml(featuredInsight.kicker || "Design Note")}</span>
+          <strong>${escapeHtml(featuredInsight.title)}</strong>
+          <p>${escapeHtml(featuredInsight.copy)}</p>
+          <div class="proposal-insight__tags">
+            ${materialTags.map((tag) => `<em>${escapeHtml(tag)}</em>`).join("")}
+          </div>
+        </article>
+
+        <aside class="proposal-direction__rail">
+          <div class="proposal-direction__note">
+            <span>Material Mood</span>
+            <strong>차분한 바탕 위에 기능적 오브제를 배치하는 큐레이션</strong>
+            <p>면은 넓게, 포인트는 작게. INO-EX 제품 조합이 과장되지 않으면서도 선명한 첫인상을 만들도록 정리했습니다.</p>
+          </div>
+          <div class="proposal-insight-list">
+            ${supportInsights.map((insight, index) => `
+              <article class="proposal-insight proposal-insight--compact">
+                <div class="proposal-insight__index">${String(index + 2).padStart(2, "0")}</div>
+                <span>${escapeHtml(insight.kicker || "Design Note")}</span>
+                <strong>${escapeHtml(insight.title)}</strong>
+                <p>${escapeHtml(insight.copy)}</p>
+              </article>
+            `).join("")}
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="proposal-section">
+      <h4>선택 제품 구성</h4>
+      <div class="proposal-product-grid">
+        ${quoteItems.map((item) => `
+          <article class="proposal-product">
+            ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}">` : ""}
+            <div>
+              <span>${escapeHtml(item.category)}</span>
+              <strong>${escapeHtml(item.name)}</strong>
+              <p>${escapeHtml(item.materialLabel)} / ${escapeHtml(item.installLabel)}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="proposal-section">
+      <h4>매칭 시공사례</h4>
+      ${cases.length ? `
+        <article class="proposal-case-slider" aria-label="매칭 시공사례 슬라이더">
+          <div class="proposal-case-slider__stage">
+            <img src="${currentCase.image}" alt="${escapeHtml(currentCase.title)}">
+            <button class="proposal-case-slider__button proposal-case-slider__button--prev" type="button" data-case-slide="prev" aria-label="이전 시공사례">‹</button>
+            <button class="proposal-case-slider__button proposal-case-slider__button--next" type="button" data-case-slide="next" aria-label="다음 시공사례">›</button>
+            <div class="proposal-case-slider__count">${proposalCaseIndex + 1} / ${cases.length}</div>
+          </div>
+          <div class="proposal-case-slider__caption">
+            <span>${escapeHtml(currentCase.productName)}</span>
+            <strong>${escapeHtml(currentCase.title)}</strong>
+            ${currentCase.copy ? `<p>${escapeHtml(currentCase.copy)}</p>` : ""}
+          </div>
+          <div class="proposal-case-slider__dots">
+            ${cases.map((_, index) => `
+              <button class="${index === proposalCaseIndex ? "is-active" : ""}" type="button" data-case-index="${index}" aria-label="${index + 1}번 시공사례"></button>
+            `).join("")}
+          </div>
+        </article>
+      ` : `<div class="proposal-empty proposal-empty--small"></div>`}
+    </section>
+  `;
+}
+
+function updateTotals() {
+  const { material, install, total } = getQuoteTotals();
 
   materialTotal.textContent = formatCurrency(material);
   materialTotalHero.textContent = formatCurrency(total);
@@ -607,13 +996,23 @@ function updateTotals() {
   printGrandTotal.textContent = formatCurrency(total);
   printDate.textContent = `출력일시: ${new Date().toLocaleString("ko-KR")}`;
   renderCartBadge();
+  renderProposal();
 }
 
 function switchView(view) {
   const showBuilder = view === "builder";
+  const showCart = view === "cart";
+  const showProposal = view === "proposal";
+
   builderView.classList.toggle("view--active", showBuilder);
-  cartView.classList.toggle("view--active", !showBuilder);
+  cartView.classList.toggle("view--active", showCart);
+  proposalView.classList.toggle("view--active", showProposal);
   goBuilderButton.classList.toggle("is-active", showBuilder);
+  goProposalButton.classList.toggle("is-active", showProposal);
+
+  if (showProposal) {
+    renderProposal();
+  }
 }
 
 function syncAll() {
@@ -687,10 +1086,25 @@ resetButton.addEventListener("click", () => {
   updatePreview();
 });
 
+function printWithMode(mode) {
+  document.body.classList.remove("is-printing-quote", "is-printing-proposal");
+  document.body.classList.add(mode === "proposal" ? "is-printing-proposal" : "is-printing-quote");
+  window.print();
+}
+
 printButton.addEventListener("click", () => {
   renderPrintQuote();
   updateTotals();
-  window.print();
+  printWithMode("quote");
+});
+
+proposalPrintButton.addEventListener("click", () => {
+  renderProposal();
+  printWithMode("proposal");
+});
+
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("is-printing-quote", "is-printing-proposal");
 });
 
 cartList.addEventListener("click", (event) => {
@@ -706,10 +1120,42 @@ cartList.addEventListener("click", (event) => {
   updateTotals();
 });
 
+proposalBody.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const cases = getProposalCases();
+  if (!cases.length) {
+    return;
+  }
+
+  const slideButton = target.closest("[data-case-slide]");
+  if (slideButton instanceof HTMLElement) {
+    const direction = slideButton.dataset.caseSlide;
+    proposalCaseIndex = direction === "prev"
+      ? (proposalCaseIndex - 1 + cases.length) % cases.length
+      : (proposalCaseIndex + 1) % cases.length;
+    renderProposal();
+    return;
+  }
+
+  const dotButton = target.closest("[data-case-index]");
+  if (dotButton instanceof HTMLElement) {
+    proposalCaseIndex = Number(dotButton.dataset.caseIndex) || 0;
+    renderProposal();
+  }
+});
+
 goBuilderButton.addEventListener("click", () => switchView("builder"));
 goCartButton.addEventListener("click", () => switchView("cart"));
+goProposalButton.addEventListener("click", () => switchView("proposal"));
 builderToCartButton.addEventListener("click", () => switchView("cart"));
 backToBuilderButton.addEventListener("click", () => switchView("builder"));
+cartToProposalButton.addEventListener("click", () => switchView("proposal"));
+proposalToBuilderButton.addEventListener("click", () => switchView("builder"));
+proposalToCartButton.addEventListener("click", () => switchView("cart"));
 
 previewImage.addEventListener("error", () => {
   previewImage.hidden = true;

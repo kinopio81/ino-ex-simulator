@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INO-EX 자재단가&시공단가 시뮬레이터</title>
+  <title>INO-EX 공간 시뮬레이터</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,8 +13,11 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <span class="brand__eyebrow">INO-EX Material Pricing Suite</span>
-        <h1>INO-EX 자재단가&시공단가 시뮬레이터</h1>
+        <img class="brand__logo" src="assets/inoex-logo.png" alt="INO EX">
+        <div>
+          <span class="brand__eyebrow">INO-EX Spatial Proposal Suite</span>
+          <h1>INO-EX 공간 시뮬레이터</h1>
+        </div>
       </div>
       <div class="topbar__actions">
         <button class="nav-button is-active" id="goBuilderButton" type="button">Step 1 자재 선택</button>
@@ -22,6 +25,7 @@
           장바구니 / 견적 결과
           <span class="cart-badge" id="cartBadge">0</span>
         </button>
+        <button class="nav-button" id="goProposalButton" type="button">Step 3 제안서</button>
       </div>
     </header>
 
@@ -105,7 +109,7 @@
             <div class="preview-card">
               <div class="preview-card__media">
                 <img id="previewImage" alt="">
-                <div class="preview-card__placeholder" id="previewImagePlaceholder">이미지 준비중</div>
+                <div class="preview-card__placeholder" id="previewImagePlaceholder"></div>
               </div>
               <div class="preview-card__content">
                 <div class="preview-card__head">
@@ -145,10 +149,11 @@
           <div>
             <p class="section-label">Step 2</p>
             <h2>견적 결과 / 장바구니</h2>
-            <p class="hero-card__text">담아둔 항목을 확인하고 PDF 저장 또는 인쇄를 진행할 수 있습니다.</p>
+            <p class="hero-card__text">담아둔 품목을 확인하고 PDF 저장 또는 인쇄를 진행할 수 있습니다.</p>
           </div>
           <div class="hero-card__actions">
             <button class="ghost-button" id="backToBuilderButton" type="button">Step 1 이동하기</button>
+            <button class="ghost-button" id="cartToProposalButton" type="button">제안서 보기</button>
             <button class="primary-button" id="printButton" type="button">인쇄 / PDF 저장</button>
           </div>
         </div>
@@ -215,6 +220,36 @@
               </tbody>
             </table>
           </div>
+        </section>
+      </section>
+
+      <section class="view" id="proposalView">
+        <div class="hero-card hero-card--compact">
+          <div>
+            <p class="section-label">Step 3</p>
+            <h2>조합 제안서</h2>
+            <p class="hero-card__text">선택한 제품 조합을 바탕으로 공간 제안 문구와 시공사례 이미지를 함께 정리합니다.</p>
+          </div>
+          <div class="hero-card__actions">
+            <button class="ghost-button" id="proposalToBuilderButton" type="button">Step 1 추가 선택</button>
+            <button class="ghost-button" id="proposalToCartButton" type="button">견적 결과로 이동</button>
+            <button class="primary-button" id="proposalPrintButton" type="button">제안서 PDF 저장</button>
+          </div>
+        </div>
+
+        <section class="proposal-sheet" id="proposalSheet">
+          <div class="proposal-sheet__header">
+            <div>
+              <p class="section-label">Proposal Sheet</p>
+              <h3>INO-EX 공간 조합 제안서</h3>
+              <p id="proposalDate" class="print-sheet__meta"></p>
+            </div>
+            <div class="print-sheet__totals">
+              <div><span>선택 품목</span><strong id="proposalItemCount">0개</strong></div>
+              <div><span>최종 합계</span><strong id="proposalGrandTotal">0원</strong></div>
+            </div>
+          </div>
+          <div id="proposalBody"></div>
         </section>
       </section>
     </main>
