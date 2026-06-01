@@ -1177,6 +1177,203 @@ img {
   border: none;
 }
 
+body.print-export {
+  min-height: auto;
+  background: #fff;
+}
+
+body.print-export .proposal-sheet,
+body.print-export .print-sheet {
+  width: min(190mm, calc(100% - 24px));
+  max-width: none;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.print-export .proposal-section--direction {
+  padding: 14mm;
+  border-radius: 12mm;
+  background:
+    linear-gradient(135deg, rgba(255, 253, 248, 0.98), rgba(239, 231, 216, 0.92)),
+    radial-gradient(circle at 8% 4%, rgba(87, 128, 113, 0.16), transparent 28%),
+    radial-gradient(circle at 92% 20%, rgba(221, 171, 95, 0.16), transparent 24%);
+}
+
+body.print-export .proposal-direction {
+  grid-template-columns: 1fr;
+  gap: 6mm;
+}
+
+body.print-export .proposal-insight--featured {
+  min-height: 0;
+}
+
+body.print-export .proposal-insight__tags {
+  position: static;
+  margin-top: 8mm;
+}
+
+body.print-export .proposal-product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.print-export .proposal-case-slider__button,
+body.print-export .proposal-case-slider__dots {
+  display: none;
+}
+
+body.print-export .proposal-case-slider__stage {
+  min-height: 0;
+}
+
+body.print-export .proposal-case-slider__stage img {
+  height: auto;
+  max-height: 145mm;
+  object-fit: contain;
+}
+
+.pdf-download-stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 794px;
+  background: #fff;
+  pointer-events: none;
+}
+
+.pdf-download-sheet {
+  width: 794px !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 34px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.pdf-download-sheet .proposal-section {
+  break-inside: auto;
+  margin-top: 28px;
+}
+
+.pdf-download-sheet .proposal-section--direction {
+  padding: 24px;
+  border-radius: 24px;
+  background: #f7f2e9 !important;
+  overflow: visible;
+}
+
+.pdf-download-sheet .proposal-section--direction::before {
+  display: none;
+  background-image: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+.pdf-download-sheet .proposal-section--direction .proposal-section__title::after {
+  background: var(--accent);
+}
+
+.pdf-download-sheet .proposal-direction {
+  display: block;
+}
+
+.pdf-download-sheet .proposal-direction__rail {
+  display: block;
+}
+
+.pdf-download-sheet .proposal-direction__note,
+.pdf-download-sheet .proposal-insight {
+  margin-top: 14px;
+  background: #fffdf8 !important;
+  break-inside: avoid;
+  overflow: visible;
+}
+
+.pdf-download-sheet .proposal-direction__note::before {
+  background: var(--primary);
+}
+
+.pdf-download-sheet .proposal-insight--featured {
+  min-height: 0;
+  background: #1d5a47 !important;
+}
+
+.pdf-download-sheet .proposal-insight--featured p {
+  display: block;
+  color: rgba(255, 248, 235, 0.9);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.pdf-download-sheet .proposal-insight--featured strong {
+  font-size: 34px;
+  line-height: 1.26;
+}
+
+.pdf-download-sheet .proposal-insight__tags {
+  position: static;
+  margin-top: 24px;
+}
+
+.pdf-download-sheet .proposal-insight--compact::before {
+  background: rgba(29, 90, 71, 0.32);
+}
+
+.pdf-download-sheet .proposal-product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pdf-download-sheet .proposal-product,
+.pdf-download-sheet .proposal-case-slider {
+  break-inside: avoid;
+}
+
+.pdf-download-sheet .proposal-case-slider__button,
+.pdf-download-sheet .proposal-case-slider__dots {
+  display: none;
+}
+
+.pdf-download-sheet .proposal-case-slider__stage {
+  min-height: 0;
+  background: #f8f4ed !important;
+}
+
+.pdf-download-sheet .proposal-case-slider__stage img {
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+}
+
+.pdf-download-sheet .print-table-wrap {
+  overflow: visible;
+}
+
+.pdf-download-sheet .print-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.pdf-download-sheet .print-table th,
+.pdf-download-sheet .print-table td {
+  padding: 8px 7px;
+  font-size: 10px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.pdf-download-sheet .print-thumb {
+  width: 34px;
+  height: 34px;
+}
+
 @media (max-width: 1080px) {
   .builder-layout,
   .summary-grid,
@@ -1506,5 +1703,67 @@ img {
   .proposal-case-slider__button,
   .proposal-case-slider__dots {
     display: none;
+  }
+
+  body.print-export .proposal-sheet,
+  body.print-export .print-sheet {
+    width: 100%;
+    margin: 0;
+  }
+
+  body.print-export .proposal-section {
+    break-inside: auto;
+    margin-top: 7mm;
+  }
+
+  body.print-export .proposal-section--direction {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  body.print-export .proposal-direction {
+    display: block;
+  }
+
+  body.print-export .proposal-direction__rail {
+    display: block;
+  }
+
+  body.print-export .proposal-insight,
+  body.print-export .proposal-direction__note,
+  body.print-export .proposal-insight--compact {
+    padding: 5mm;
+    margin-top: 4mm;
+    break-inside: avoid;
+    overflow: visible;
+  }
+
+  body.print-export .proposal-insight--featured strong {
+    font-size: 20pt;
+  }
+
+  body.print-export .proposal-insight strong {
+    font-size: 14pt;
+  }
+
+  body.print-export .proposal-insight p,
+  body.print-export .proposal-direction__note p,
+  body.print-export .proposal-product p,
+  body.print-export .proposal-case-slider p {
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+
+  body.print-export .proposal-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.print-export .proposal-case-slider__stage img {
+    height: auto;
+    max-height: 120mm;
   }
 }

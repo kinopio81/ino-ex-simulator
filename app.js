@@ -1086,7 +1086,105 @@ resetButton.addEventListener("click", () => {
   updatePreview();
 });
 
+function waitForImages(documentElement) {
+  const images = Array.from(documentElement.images || documentElement.querySelectorAll("img"));
+  if (!images.length) {
+    return Promise.resolve();
+  }
+
+  return Promise.all(images.map((image) => {
+    if (image.complete) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      image.addEventListener("load", resolve, { once: true });
+      image.addEventListener("error", resolve, { once: true });
+    });
+  }));
+}
+
+function isMobilePdfDownload() {
+  return window.matchMedia("(max-width: 820px)").matches
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function downloadPdfElement(element, mode) {
+  if (typeof window.html2pdf !== "function") {
+    return false;
+  }
+
+  const stage = document.createElement("div");
+  let clone;
+  const actionButton = mode === "proposal" ? proposalPrintButton : printButton;
+  const originalButtonText = actionButton.textContent;
+  const filename = mode === "proposal"
+    ? "INO-EX_공간_조합_제안서.pdf"
+    : "INO-EX_상세_견적서.pdf";
+  const cleanup = () => {
+    stage.remove();
+    actionButton.disabled = false;
+    actionButton.textContent = originalButtonText;
+  };
+
+  stage.className = "pdf-download-stage";
+  actionButton.disabled = true;
+  actionButton.textContent = "PDF 생성 중...";
+
+  Promise.all([
+    waitForImages(element),
+    document.fonts?.ready || Promise.resolve()
+  ])
+    .then(() => {
+      clone = element.cloneNode(true);
+      clone.classList.add("pdf-download-sheet");
+      stage.append(clone);
+      document.body.append(stage);
+      return waitForImages(stage);
+    })
+    .then(() => window.html2pdf()
+      .set({
+        margin: [8, 8, 8, 8],
+        filename,
+        image: { type: "jpeg", quality: 0.96 },
+        html2canvas: {
+          scale: 1.35,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false
+        },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: [".proposal-insight", ".proposal-product", ".proposal-case-slider", ".cart-item"]
+        }
+      })
+      .from(clone)
+      .save())
+    .then(cleanup)
+    .catch((error) => {
+      console.error("PDF generation failed:", error);
+      cleanup();
+      window.alert("PDF 파일 생성에 실패했습니다. 웹 배포 주소 또는 로컬 서버 주소에서 다시 시도해 주세요.");
+    });
+
+  return true;
+}
+
 function printWithMode(mode) {
+  const targetElement = mode === "proposal"
+    ? document.querySelector("#proposalSheet")
+    : document.querySelector("#printSheet");
+
+  if (
+    targetElement
+    && (mode === "proposal" || isMobilePdfDownload())
+    && downloadPdfElement(targetElement, mode)
+  ) {
+    return;
+  }
+
   document.body.classList.remove("is-printing-quote", "is-printing-proposal");
   document.body.classList.add(mode === "proposal" ? "is-printing-proposal" : "is-printing-quote");
   window.print();
