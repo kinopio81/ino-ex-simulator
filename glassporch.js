@@ -368,6 +368,45 @@ function getAttachedFaceId() {
   return porchAttachFaceSelect.value === "none" ? null : porchAttachFaceSelect.value;
 }
 
+// 접속면으로 지정되기 직전의 면 설정을 기억해 두었다가, 접속을 풀면 그대로 되돌린다.
+const porchFaceMemory = {};
+let porchLastAttached = null;
+function readRawFace(faceId) {
+  return {
+    finish: porchFaceTable.querySelector(`[data-face="${faceId}"] [data-face-finish]`).value,
+    flap: porchFlapTable.querySelector(`[data-flap-face="${faceId}"]`).value,
+    curtain: porchCurtainFaces.querySelector(`[data-curtain-face="${faceId}"]`).checked,
+    screen: porchScreenFaces.querySelector(`[data-screen-face="${faceId}"]`).checked
+  };
+}
+function writeRawFace(faceId, state) {
+  porchFaceTable.querySelector(`[data-face="${faceId}"] [data-face-finish]`).value = state.finish;
+  porchFlapTable.querySelector(`[data-flap-face="${faceId}"]`).value = state.flap;
+  porchCurtainFaces.querySelector(`[data-curtain-face="${faceId}"]`).checked = state.curtain;
+  porchScreenFaces.querySelector(`[data-screen-face="${faceId}"]`).checked = state.screen;
+}
+let porchConnectMemory = null;
+function handleAttachChange() {
+  const next = getAttachedFaceId();
+  if (porchLastAttached && porchLastAttached !== next && porchFaceMemory[porchLastAttached]) {
+    writeRawFace(porchLastAttached, porchFaceMemory[porchLastAttached]);
+  }
+  if (next && next !== porchLastAttached) {
+    porchFaceMemory[next] = readRawFace(next);
+  }
+  if (next && !porchLastAttached) {
+    porchConnectMemory = { gap: porchGapToggle.checked, spacer: porchSpacerToggle.checked };
+    porchGapToggle.checked = true;
+    porchSpacerToggle.checked = true;
+  }
+  if (!next && porchLastAttached && porchConnectMemory) {
+    porchGapToggle.checked = porchConnectMemory.gap;
+    porchSpacerToggle.checked = porchConnectMemory.spacer;
+    porchConnectMemory = null;
+  }
+  porchLastAttached = next;
+}
+
 // 건물 접속면은 기둥·유리문·스크린·커튼·방충망이 들어가지 않는 개방면으로 강제한다.
 function readFaces() {
   const attached = getAttachedFaceId();
@@ -376,6 +415,7 @@ function readFaces() {
     return {
       ...face,
       attached: isAttached,
+      prevFinish: isAttached && porchFaceMemory[face.id] ? porchFaceMemory[face.id].finish : null,
       finish: isAttached ? "open" : porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`).value,
       flap: isAttached ? "none" : porchFlapTable.querySelector(`[data-flap-face="${face.id}"]`).value,
       curtain: isAttached ? false : porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`).checked,
@@ -449,14 +489,27 @@ function calculatePorch() {
   const faceMm = (face) => (face.axis === "W" ? width.step.actual : depth.step.actual);
 
   // ---- 유리문 면 조합 → 세트 타입
-  const glassFaces = faces.filter((face) => face.finish === "glass");
-  const frontGlass = glassFaces.filter((face) => face.axis === "W").length;
-  const sideGlass = glassFaces.filter((face) => face.axis === "D").length;
+  // 건물 접속면이 원래 유리문이었다면, 그 면을 유리문으로 친 세트에서 평균 1면 금액을 감액한다.
+  // 평균 1면 금액 = (4면 세트 − 정면+측면 세트) ÷ 2
   const layoutMap = { "1-2": "basic3", "1-0": "front1", "0-1": "side1", "1-1": "frontSide", "0-2": "side2", "2-2": "all4" };
-  const layoutId = layoutMap[`${frontGlass}-${sideGlass}`];
+  const layoutOf = (list) => layoutMap[`${list.filter((face) => face.axis === "W").length}-${list.filter((face) => face.axis === "D").length}`];
+  const glassFaces = faces.filter((face) => face.finish === "glass");
+  const attachedGlassFace = faces.find((face) => face.attached && face.prevFinish === "glass") || null;
+  let layoutId = layoutOf(glassFaces);
+  let attachDeductionJpy = 0;
+  if (attachedGlassFace) {
+    const withAttached = layoutOf(glassFaces.concat(attachedGlassFace));
+    if (withAttached) {
+      layoutId = withAttached;
+      attachDeductionJpy = (priceTable[heightKey].all4 - priceTable[heightKey].frontSide) / 2;
+    } else {
+      warnings.push(`${attachedGlassFace.label}을 유리문으로 친 조합이 세트 가격표에 없어, 접속면 유리문을 제외한 세트로 산정했습니다.`);
+    }
+  }
   if (!layoutId) {
+    const total = glassFaces.length + (attachedGlassFace ? 1 : 0);
     warnings.push(
-      frontGlass + sideGlass === 0
+      total === 0
         ? "유리문이 한 면도 없는 구성은 카탈로그 세트 가격표에 없습니다. 최소 한 면을 유리문으로 지정해 주세요."
         : "정면과 배면을 모두 유리문으로 하면서 측면이 0~1면인 조합은 카탈로그 세트 가격표에 없습니다. (지원 조합: 기본 3면, 정면 1면, 측면 1면, 정면+측면, 측면 2면, 4면)"
     );
@@ -465,15 +518,24 @@ function calculatePorch() {
 
   const setKrw = jpyToKrw(priceTable[heightKey][layoutId]);
   const basic3Krw = jpyToKrw(priceTable[heightKey].basic3);
+  const pricedGlassFaces = attachDeductionJpy ? glassFaces.concat(attachedGlassFace) : glassFaces;
   const setCompare = layoutId === "basic3"
     ? ""
-    : ` · 기본 3면 세트 ${formatCurrency(basic3Krw)} 대비 ${setKrw < basic3Krw ? "−" : "+"}${formatCurrency(Math.abs(setKrw - basic3Krw))} (유리문 ${glassFaces.map((face) => face.label).join("·")}만 포함)`;
+    : ` · 기본 3면 세트 ${formatCurrency(basic3Krw)} 대비 ${setKrw < basic3Krw ? "−" : "+"}${formatCurrency(Math.abs(setKrw - basic3Krw))} (유리문 ${pricedGlassFaces.map((face) => face.label).join("·")} 기준)`;
   push({
     group: "본체",
-    label: `세트 본체 (${sizeLabel} / ${PORCH_LAYOUT_LABELS[layoutId]})`,
+    label: `세트 본체 (${sizeLabel} / ${PORCH_LAYOUT_LABELS[layoutId]}${attachDeductionJpy ? " · 접속면 포함 기준" : ""})`,
     detail: `본체 실치수 정면 ${formatNumber(width.step.actual)} × 깊이 ${formatNumber(depth.step.actual)}mm · 기둥·프레임·지붕재·유리문(스텐컬러) 포함, 내천정·조명 미포함${setCompare}`,
     krw: setKrw
   });
+  if (attachDeductionJpy) {
+    push({
+      group: "본체",
+      label: `건물 접속면 감액 · ${attachedGlassFace.label} 유리문 제외`,
+      detail: `(4면 세트 ${formatCurrency(jpyToKrw(priceTable[heightKey].all4))} − 정면+측면 세트 ${formatCurrency(jpyToKrw(priceTable[heightKey].frontSide))}) ÷ 2 = 평균 1면 금액. 기둥 감액은 미반영`,
+      krw: -jpyToKrw(attachDeductionJpy)
+    });
+  }
 
   // ---- 유리문 세트별 가산
   const doorSets = glassFaces.map((face) => {
@@ -705,7 +767,9 @@ function calculatePorch() {
     push({
       group: "연결부자재",
       label: `건물 접속면 · ${attachedFace.label} (${faceSizeLabel(attachedFace)})`,
-      detail: `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 가격은 ${PORCH_LAYOUT_LABELS[layoutId]} 기준으로 해당 면 유리문이 빠진 금액입니다. 카탈로그 세트는 4기둥 독립형이라 기둥 생략에 따른 감액 항목은 없습니다 (P.1150).`,
+      detail: attachDeductionJpy
+        ? `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 원래 유리문 면이라 세트 본체에서 평균 1면 금액을 감액했습니다. 기둥 감액은 미반영 (P.1150).`
+        : `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 원래 유리문이 아닌 면이라 세트 감액은 없습니다. 기둥 감액은 미반영 (P.1150).`,
       included: true
     });
   }
@@ -864,7 +928,7 @@ function renderPorch() {
           </div>
         </div>
       </td>
-      <td>${line.included ? "포함" : formatCurrency(line.krw)}</td>
+      <td class="${line.krw < 0 ? "is-negative" : ""}">${line.included ? "포함" : formatCurrency(line.krw)}</td>
     </tr>
   `).join("");
 
@@ -1047,12 +1111,7 @@ function buildPorchForm() {
 }
 
 specialProductSelect.addEventListener("change", () => showSpecialProduct(specialProductSelect.value));
-porchAttachFaceSelect.addEventListener("change", () => {
-  if (getAttachedFaceId()) {
-    porchGapToggle.checked = true;
-    porchSpacerToggle.checked = true;
-  }
-});
+porchAttachFaceSelect.addEventListener("change", handleAttachChange);
 porchForm.addEventListener("input", renderPorch);
 porchForm.addEventListener("change", renderPorch);
 porchForm.addEventListener("submit", (event) => event.preventDefault());

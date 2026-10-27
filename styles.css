@@ -1641,6 +1641,11 @@ img {
   font-weight: 700;
 }
 
+.porch-breakdown td.is-negative {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .porch-breakdown tr.is-included td {
   color: var(--ink-soft);
 }
