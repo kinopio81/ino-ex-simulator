@@ -678,7 +678,7 @@ function renderBreakdownList(item, className) {
         <li class="${line.image ? "has-image" : ""}">
           ${line.image ? `<img src="${line.image}" alt="">` : ""}
           <span>${escapeHtml(line.label)}</span>
-          <strong>${line.included ? "포함" : formatCurrency(line.krw)}</strong>
+          <strong>${line.separate ? "별도 필요" : line.included ? "포함" : formatCurrency(line.krw)}</strong>
         </li>
       `).join("")}
     </ul>

@@ -1641,6 +1641,12 @@ img {
   font-weight: 700;
 }
 
+.porch-breakdown td.is-separate {
+  color: var(--accent-deep);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .porch-breakdown td.is-negative {
   color: var(--danger);
   font-weight: 700;

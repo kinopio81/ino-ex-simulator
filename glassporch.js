@@ -96,9 +96,9 @@ const PORCH_FRAME_SURCHARGE = {
 const PORCH_OUTER_KEY = { front: 69000, side: 51000 };
 
 const PORCH_GLASS_TYPES = [
-  { id: "standard", label: "표준 · 스텐컬러", image: "" },
-  { id: "grey", label: "표준 · 그레이 (가산)", image: "" },
-  { id: "frame", label: "프레임타입 · 그레이 (가산)", image: OPT_IMG + "frame-type.jpg" }
+  { id: "standard", label: "표준 · 스텐컬러", image: "", swatch: OPT_IMG + "colors/glass-standard.jpg" },
+  { id: "grey", label: "표준 · 그레이 (가산)", image: "", swatch: OPT_IMG + "colors/glass-grey.jpg" },
+  { id: "frame", label: "프레임타입 · 그레이 (가산)", image: OPT_IMG + "frame-type.jpg", swatch: OPT_IMG + "frame-type.jpg" }
 ];
 
 // 면 마감 (엔). W = 정면 방향(정면/배면), D = 깊이 방향(좌/우측면)
@@ -165,8 +165,8 @@ const PORCH_FRAME_COLORS = [
 ].map((item) => ({ ...item, swatch: `${SWATCH_IMG}frame-${item.id}.jpg` }));
 
 const PORCH_ROOF_MATERIALS = [
-  { id: "clear_matte", label: "클리어 매트 폴리카 (기본)" },
-  { id: "brown_smoke", label: "브라운 스모크 폴리카 · 열선컷 (가산)" }
+  { id: "clear_matte", label: "클리어 매트 폴리카 (기본)", swatch: OPT_IMG + "colors/roof-clear_matte.jpg" },
+  { id: "brown_smoke", label: "브라운 스모크 폴리카 · 열선컷 (가산)", swatch: OPT_IMG + "colors/roof-brown_smoke.jpg" }
 ];
 
 // 내천정 (엔). key: depth-width
@@ -218,7 +218,11 @@ const PORCH_CURTAIN = {
     { maxHeight: 2620, label: "2010~2620", narrow: 52800, wide: 84700 }
   ],
   kit: 29400,
-  colors: ["화이트", "샌드", "그레이"]
+  colors: [
+    { id: "white", label: "화이트", swatch: OPT_IMG + "colors/curtain-white.jpg" },
+    { id: "sand", label: "샌드", swatch: OPT_IMG + "colors/curtain-sand.jpg" },
+    { id: "grey", label: "그레이", swatch: OPT_IMG + "colors/curtain-grey.jpg" }
+  ]
 };
 const PORCH_CURTAIN_HEIGHT = { H25: 2300, H27: 2500 }; // 유리문 개구 높이 기준 (P.1133)
 
@@ -230,7 +234,10 @@ const PORCH_SCREEN_DOOR = {
   },
   fix: { W30: 23100, W37: 24100, W44: 25500, D24: 15000, D31: 15900 },
   stopper: { H25: { single: 21400, pair: 35600 }, H27: { single: 21600, pair: 36100 } },
-  frameColors: ["블랙", "화이트"]
+  frameColors: [
+    { id: "black", label: "블랙", swatch: OPT_IMG + "colors/screen-black.jpg" },
+    { id: "white", label: "화이트", swatch: OPT_IMG + "colors/screen-white.jpg" }
+  ]
 };
 
 // 연결부자재 (P.1145, 엔)
@@ -494,7 +501,7 @@ function calculatePorch() {
   const layoutMap = { "1-2": "basic3", "1-0": "front1", "0-1": "side1", "1-1": "frontSide", "0-2": "side2", "2-2": "all4" };
   const layoutOf = (list) => layoutMap[`${list.filter((face) => face.axis === "W").length}-${list.filter((face) => face.axis === "D").length}`];
   const glassFaces = faces.filter((face) => face.finish === "glass");
-  const attachedGlassFace = faces.find((face) => face.attached && face.prevFinish === "glass") || null;
+  const attachedGlassFace = faces.find((face) => face.attached) || null;
   let layoutId = layoutOf(glassFaces);
   let attachDeductionJpy = 0;
   if (attachedGlassFace) {
@@ -503,7 +510,7 @@ function calculatePorch() {
       layoutId = withAttached;
       attachDeductionJpy = (priceTable[heightKey].all4 - priceTable[heightKey].frontSide) / 2;
     } else {
-      warnings.push(`${attachedGlassFace.label}을 유리문으로 친 조합이 세트 가격표에 없어, 접속면 유리문을 제외한 세트로 산정했습니다.`);
+      warnings.push(`${attachedGlassFace.label}을 유리문으로 친 조합이 세트 가격표에 없어, 접속면을 제외한 세트로 산정하고 감액은 적용하지 않았습니다.`);
     }
   }
   if (!layoutId) {
@@ -531,7 +538,7 @@ function calculatePorch() {
   if (attachDeductionJpy) {
     push({
       group: "본체",
-      label: `건물 접속면 감액 · ${attachedGlassFace.label} 유리문 제외`,
+      label: `건물 접속면 감액 · ${attachedGlassFace.label}`,
       detail: `(4면 세트 ${formatCurrency(jpyToKrw(priceTable[heightKey].all4))} − 정면+측면 세트 ${formatCurrency(jpyToKrw(priceTable[heightKey].frontSide))}) ÷ 2 = 평균 1면 금액. 기둥 감액은 미반영`,
       krw: -jpyToKrw(attachDeductionJpy)
     });
@@ -548,7 +555,7 @@ function calculatePorch() {
     label: `유리문 ${doorSets.length}세트 · ${glassType.label}`,
     detail: doorSets.map((set) => set.label).join(" / ") + " · 세트 본체 가격에 포함",
     included: true,
-    image: glassType.image
+    image: glassType.swatch
   });
   if (glassType.id === "grey" || glassType.id === "frame") {
     const table = glassType.id === "grey" ? PORCH_GREY_SURCHARGE : PORCH_FRAME_SURCHARGE;
@@ -578,10 +585,11 @@ function calculatePorch() {
       group: "지붕",
       label: "지붕재 브라운 스모크 폴리카 (열선컷 타입) 가산",
       detail: "열선컷 지붕재 가산액 (P.1130~1131)",
-      krw: jpyToKrw(layoutId === "basic3" ? priceTable.heatCut.basic3 : priceTable.heatCut.other)
+      krw: jpyToKrw(layoutId === "basic3" ? priceTable.heatCut.basic3 : priceTable.heatCut.other),
+      image: roof.swatch
     });
   } else {
-    push({ group: "지붕", label: "지붕재 클리어 매트 폴리카", detail: "세트 본체 가격에 포함", included: true });
+    push({ group: "지붕", label: "지붕재 클리어 매트 폴리카", detail: "세트 본체 가격에 포함", included: true, image: roof.swatch });
   }
 
   // ---- 면 마감 (벽면세트 / 슬라이드스크린)
@@ -694,10 +702,21 @@ function calculatePorch() {
     });
   }
 
+  // ---- 트랜스 (라인라이트·다운라이트 전원)
+  if ((hasCeiling && lineLight) || downlight.id !== "none") {
+    push({
+      group: "조명",
+      label: "저전압 트랜스 (12V/24V 타이머 트랜스) · 별도 필요",
+      detail: "라인라이트·다운라이트 전원용. 트랜스, 전선보호관, 전원코드는 본 견적에 포함하지 않음 (P.1143, P.642~646)",
+      separate: true
+    });
+  }
+
   // ---- 비엔타 커튼
   const curtainFaces = faces.filter((face) => face.curtain);
   if (curtainFaces.length) {
-    const curtainColor = porchCurtainColorSelect.value;
+    const curtainColor = (PORCH_CURTAIN.colors.find((item) => item.id === porchCurtainColorSelect.value) || PORCH_CURTAIN.colors[0]).label;
+    const curtainSwatch = (PORCH_CURTAIN.colors.find((item) => item.id === porchCurtainColorSelect.value) || PORCH_CURTAIN.colors[0]).swatch;
     const curtainHeight = PORCH_CURTAIN_HEIGHT[heightKey];
     const band = PORCH_CURTAIN.fabric.find((row) => curtainHeight <= row.maxHeight) || PORCH_CURTAIN.fabric[PORCH_CURTAIN.fabric.length - 1];
     curtainFaces.forEach((face) => {
@@ -710,7 +729,7 @@ function calculatePorch() {
         label: `비엔타 커튼 ${curtainColor} · ${face.label} 생지 ${pieces}장 (폴 길이 약 ${formatNumber(Math.round(pieceWidth))}mm)`,
         detail: `높이 ${formatNumber(curtainHeight)}mm (${band.label}) × 폭 ${pieceWidth <= 1000 ? "250~1000" : "1010~2000"} 구간 단가 (P.1352)`,
         krw: jpyToKrw(fabric * pieces),
-        image: OPT_IMG + "vienta-curtain.jpg"
+        image: curtainSwatch
       });
       push({
         group: "커튼",
@@ -728,7 +747,8 @@ function calculatePorch() {
     warnings.push("방충망은 유리문 면에만 설치됩니다. 유리문이 아닌 면의 방충망 체크는 계산에서 제외했습니다.");
   }
   if (screenGlassFaces.length) {
-    const screenColor = porchScreenColorSelect.value;
+    const screenColorItem = PORCH_SCREEN_DOOR.frameColors.find((item) => item.id === porchScreenColorSelect.value) || PORCH_SCREEN_DOOR.frameColors[0];
+    const screenColor = screenColorItem.label;
     screenGlassFaces.forEach((face) => {
       const code = face.axis === "W" ? `W${wk}` : `D${dk}`;
       push({
@@ -736,7 +756,7 @@ function calculatePorch() {
         label: `방충망 본체세트 · ${face.label} (${faceSizeLabel(face)}, ${height.label}) · 프레임 ${screenColor}`,
         detail: "플리츠 방충망 (P.1144)",
         krw: jpyToKrw(PORCH_SCREEN_DOOR.body[heightKey][code]),
-        image: OPT_IMG + "screen-door.jpg"
+        image: screenColorItem.swatch
       });
       push({
         group: "방충망",
@@ -768,8 +788,8 @@ function calculatePorch() {
       group: "연결부자재",
       label: `건물 접속면 · ${attachedFace.label} (${faceSizeLabel(attachedFace)})`,
       detail: attachDeductionJpy
-        ? `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 원래 유리문 면이라 세트 본체에서 평균 1면 금액을 감액했습니다. 기둥 감액은 미반영 (P.1150).`
-        : `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 원래 유리문이 아닌 면이라 세트 감액은 없습니다. 기둥 감액은 미반영 (P.1150).`,
+        ? `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 본체는 이 면을 포함한 기준으로 잡고 평균 1면 금액을 감액했습니다. 기둥 감액은 미반영 (P.1150).`
+        : `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 가격표 조합 제약으로 감액을 적용하지 못했습니다. 기둥 감액은 미반영 (P.1150).`,
       included: true
     });
   }
@@ -819,7 +839,7 @@ function calculatePorch() {
     push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw });
   });
 
-  const materialKrw = lines.reduce((sum, line) => sum + line.krw, 0);
+  const materialKrw = lines.reduce((sum, line) => sum + (line.separate ? 0 : line.krw), 0);
 
   return {
     valid: true,
@@ -917,7 +937,7 @@ function renderPorch() {
   porchSpecSummary.textContent = `정면 ${describeSize(result.width)} × 깊이 ${describeSize(result.depth)} × ${result.height.label} · ${PORCH_LAYOUT_LABELS[result.layoutId]}`;
 
   porchBreakdown.innerHTML = result.lines.map((line) => `
-    <tr class="${line.included ? "is-included" : ""}">
+    <tr class="${line.included || line.separate ? "is-included" : ""}">
       <td>
         <div class="porch-breakdown__row">
           ${line.image ? `<img class="porch-breakdown__thumb" src="${line.image}" alt="">` : ""}
@@ -928,7 +948,7 @@ function renderPorch() {
           </div>
         </div>
       </td>
-      <td class="${line.krw < 0 ? "is-negative" : ""}">${line.included ? "포함" : formatCurrency(line.krw)}</td>
+      <td class="${line.krw < 0 ? "is-negative" : ""}${line.separate ? " is-separate" : ""}">${line.separate ? "별도 필요" : line.included ? "포함" : formatCurrency(line.krw)}</td>
     </tr>
   `).join("");
 
@@ -1052,15 +1072,19 @@ function buildPorchForm() {
   const option = (value, label) => `<option value="${value}">${escapeHtml(label)}</option>`;
   porchHeightSelect.innerHTML = PORCH_SIZE_STEPS.height.map((step) => option(step.key, `${formatNumber(step.mm)}mm`)).join("");
   porchGlassTypeSelect.innerHTML = PORCH_GLASS_TYPES.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchGlassTypeSelect, PORCH_GLASS_TYPES);
   porchFrameColorSelect.innerHTML = PORCH_FRAME_COLORS.map((item) => option(item.id, item.label)).join("");
   createSwatchPicker(porchFrameColorSelect, PORCH_FRAME_COLORS);
   porchRoofSelect.innerHTML = PORCH_ROOF_MATERIALS.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchRoofSelect, PORCH_ROOF_MATERIALS);
   porchCeilingTypeSelect.innerHTML = PORCH_CEILING_TYPES.map((item) => option(item.id, item.label)).join("");
   porchCeilingColorSelect.innerHTML = PORCH_CEILING_COLORS.map((item) => option(item.id, item.label)).join("");
   createSwatchPicker(porchCeilingColorSelect, PORCH_CEILING_COLORS);
   porchDownlightSelect.innerHTML = PORCH_DOWNLIGHTS.map((item) => option(item.id, item.label)).join("");
-  porchCurtainColorSelect.innerHTML = PORCH_CURTAIN.colors.map((color) => option(color, color)).join("");
-  porchScreenColorSelect.innerHTML = PORCH_SCREEN_DOOR.frameColors.map((color) => option(color, color)).join("");
+  porchCurtainColorSelect.innerHTML = PORCH_CURTAIN.colors.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchCurtainColorSelect, PORCH_CURTAIN.colors);
+  porchScreenColorSelect.innerHTML = PORCH_SCREEN_DOOR.frameColors.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchScreenColorSelect, PORCH_SCREEN_DOOR.frameColors);
   porchBoardSelect.innerHTML = PORCH_BOARD_SIZES.map((item) => option(item.id, item.label)).join("");
   porchBoardGradeSelect.innerHTML = PORCH_BOARD_GRADES.map((item) => option(item.id, item.label)).join("");
   porchCeilingBoardGradeSelect.innerHTML = PORCH_BOARD_GRADES.map((item) => option(item.id, item.label)).join("");
@@ -1154,8 +1178,8 @@ porchAddButton.addEventListener("click", () => {
     installAmount: result.installFee,
     totalAmount: result.total,
     breakdown: result.lines
-      .filter((line) => !line.included || line.image)
-      .map((line) => ({ label: line.label, krw: line.krw, included: !!line.included, image: line.image || "" }))
+      .filter((line) => !line.included || line.image || line.separate)
+      .map((line) => ({ label: line.label, krw: line.krw, included: !!line.included, separate: !!line.separate, image: line.image || "" }))
   });
 
   saveQuoteItems();
