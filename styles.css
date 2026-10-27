@@ -1302,6 +1302,23 @@ img {
   color: var(--ink);
 }
 
+.porch-face-table tr.is-attached th,
+.porch-face-table tr.is-attached td {
+  opacity: 0.45;
+}
+
+.porch-face-table tr.is-attached th::after {
+  content: "건물 접속";
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.toggle-line.is-attached {
+  opacity: 0.4;
+}
+
 .porch-face-check {
   width: 56px;
   text-align: center !important;

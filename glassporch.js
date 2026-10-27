@@ -319,6 +319,7 @@ const porchCurtainMedia = $("#porchCurtainMedia");
 const porchScreenFaces = $("#porchScreenFaces");
 const porchScreenColorSelect = $("#porchScreenColor");
 const porchScreenMedia = $("#porchScreenMedia");
+const porchAttachFaceSelect = $("#porchAttachFace");
 const porchGapToggle = $("#porchGapAdjuster");
 const porchSpacerToggle = $("#porchWallSpacer");
 const porchConnectMedia = $("#porchConnectMedia");
@@ -363,14 +364,49 @@ function mediaMarkup(image, caption) {
   return `<figure class="porch-media"><img src="${image}" alt="${escapeHtml(caption)}"><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
 }
 
+function getAttachedFaceId() {
+  return porchAttachFaceSelect.value === "none" ? null : porchAttachFaceSelect.value;
+}
+
+// 건물 접속면은 기둥·유리문·스크린·커튼·방충망이 들어가지 않는 개방면으로 강제한다.
 function readFaces() {
-  return PORCH_FACES.map((face) => ({
-    ...face,
-    finish: porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`).value,
-    flap: porchFlapTable.querySelector(`[data-flap-face="${face.id}"]`).value,
-    curtain: porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`).checked,
-    screen: porchScreenFaces.querySelector(`[data-screen-face="${face.id}"]`).checked
-  }));
+  const attached = getAttachedFaceId();
+  return PORCH_FACES.map((face) => {
+    const isAttached = face.id === attached;
+    return {
+      ...face,
+      attached: isAttached,
+      finish: isAttached ? "open" : porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`).value,
+      flap: isAttached ? "none" : porchFlapTable.querySelector(`[data-flap-face="${face.id}"]`).value,
+      curtain: isAttached ? false : porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`).checked,
+      screen: isAttached ? false : porchScreenFaces.querySelector(`[data-screen-face="${face.id}"]`).checked
+    };
+  });
+}
+
+function syncAttachedFaceControls() {
+  const attached = getAttachedFaceId();
+  PORCH_FACES.forEach((face) => {
+    const isAttached = face.id === attached;
+    const finishSelect = porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`);
+    const flapSelect = porchFlapTable.querySelector(`[data-flap-face="${face.id}"]`);
+    const curtainBox = porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`);
+    const screenBox = porchScreenFaces.querySelector(`[data-screen-face="${face.id}"]`);
+    if (isAttached) {
+      finishSelect.value = "open";
+      flapSelect.value = "none";
+      curtainBox.checked = false;
+      screenBox.checked = false;
+    }
+    finishSelect.disabled = isAttached;
+    flapSelect.disabled = isAttached;
+    curtainBox.disabled = isAttached;
+    screenBox.disabled = isAttached;
+    finishSelect.closest("tr").classList.toggle("is-attached", isAttached);
+    flapSelect.closest("tr").classList.toggle("is-attached", isAttached);
+    curtainBox.closest("label").classList.toggle("is-attached", isAttached);
+    screenBox.closest("label").classList.toggle("is-attached", isAttached);
+  });
 }
 
 function readCustomOptions() {
@@ -663,28 +699,39 @@ function calculatePorch() {
     });
   }
 
-  // ---- 연결부자재
+  // ---- 연결부자재 / 건물 접속면
+  const attachedFace = faces.find((face) => face.attached) || null;
+  if (attachedFace) {
+    push({
+      group: "연결부자재",
+      label: `건물 접속면 · ${attachedFace.label} (${faceSizeLabel(attachedFace)})`,
+      detail: `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 가격은 ${PORCH_LAYOUT_LABELS[layoutId]} 기준으로 해당 면 유리문이 빠진 금액입니다. 카탈로그 세트는 4기둥 독립형이라 기둥 생략에 따른 감액 항목은 없습니다 (P.1150).`,
+      included: true
+    });
+  }
   push({
     group: "연결부자재",
     label: "바닥 고정 · 하부 레일 및 기둥 기초 앵커",
     detail: "세트 본체 포함. 기초 콘크리트(600×600)는 현장 시공 (P.1150)",
     included: true
   });
+  const attachLengthMm = attachedFace ? faceMm(attachedFace) : width.step.actual;
+  const attachLabel = attachedFace ? `${attachedFace.label} ${formatNumber(attachLengthMm)}mm` : `정면 ${formatNumber(attachLengthMm)}mm`;
   if (porchGapToggle.checked) {
     push({
       group: "연결부자재",
-      label: `틈새조정재 ${height.label}용 (좌우 1세트)`,
-      detail: "본체와 건물 사이 98~128mm 틈새 막음, 본체색 동일 (P.1145)",
+      label: `틈새조정재 ${height.label}용 (좌우 1세트)${attachedFace ? ` · ${attachedFace.label} 접속부` : ""}`,
+      detail: "접속면 양끝 기둥과 건물 외벽 사이 98~128mm 틈새 막음, 본체색 동일 (P.1145)",
       krw: jpyToKrw(PORCH_GAP_ADJUSTER[heightKey]),
       image: OPT_IMG + "gap-adjuster.jpg"
     });
   }
   if (porchSpacerToggle.checked) {
-    const spacer = PORCH_WALL_SPACER.find((item) => width.step.actual <= item.maxMm) || PORCH_WALL_SPACER[PORCH_WALL_SPACER.length - 1];
+    const spacer = PORCH_WALL_SPACER.find((item) => attachLengthMm <= item.maxMm) || PORCH_WALL_SPACER[PORCH_WALL_SPACER.length - 1];
     push({
       group: "연결부자재",
-      label: `${spacer.label} (정면 ${formatNumber(width.step.actual)}mm 기준 자동 선택)`,
-      detail: "지붕과 외벽 사이 70~100mm 틈새 커버, 현장 절단 (P.1145)",
+      label: `${spacer.label} (${attachLabel} 기준 자동 선택)`,
+      detail: "접속면 지붕과 외벽 사이 70~100mm 틈새 커버, 현장 절단 (P.1145)",
       krw: jpyToKrw(spacer.jpy),
       image: OPT_IMG + "wall-spacer.jpg"
     });
@@ -785,6 +832,7 @@ function syncDownlightDefault() {
 }
 
 function renderPorch() {
+  syncAttachedFaceControls();
   syncDownlightDefault();
   renderMedia();
   const result = calculatePorch();
@@ -978,6 +1026,9 @@ function buildPorchForm() {
     </tr>
   `).join("");
 
+  porchAttachFaceSelect.innerHTML = [`<option value="none">없음 (독립 설치)</option>`]
+    .concat(PORCH_FACES.map((face) => option(face.id, `${face.label}이 건물 외벽에 접속`)))
+    .join("");
   porchCurtainFaces.innerHTML = PORCH_FACES.map((face) => `
     <label class="toggle-line"><input type="checkbox" data-curtain-face="${face.id}"><span>${face.label}</span></label>
   `).join("");
@@ -996,6 +1047,12 @@ function buildPorchForm() {
 }
 
 specialProductSelect.addEventListener("change", () => showSpecialProduct(specialProductSelect.value));
+porchAttachFaceSelect.addEventListener("change", () => {
+  if (getAttachedFaceId()) {
+    porchGapToggle.checked = true;
+    porchSpacerToggle.checked = true;
+  }
+});
 porchForm.addEventListener("input", renderPorch);
 porchForm.addEventListener("change", renderPorch);
 porchForm.addEventListener("submit", (event) => event.preventDefault());
@@ -1011,6 +1068,7 @@ porchAddButton.addEventListener("click", () => {
       face.curtain ? "커튼" : "",
       face.screen && face.finish === "glass" ? "방충망" : ""
     ].filter(Boolean);
+    if (face.attached) return `${face.label} 건물 접속`;
     return `${face.label} ${finish ? finish.label : ""}${extras.length ? ` (+${extras.join("·")})` : ""}`;
   }).join(", ");
 
