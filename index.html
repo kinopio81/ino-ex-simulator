@@ -142,6 +142,235 @@
             </div>
           </section>
         </div>
+
+        <section class="panel porch-panel">
+          <div class="panel__header porch-panel__header">
+            <div>
+              <p class="section-label">Step 1-2 · Special Order</p>
+              <h3>특별제작품 구성</h3>
+              <p class="porch-panel__text">
+                치수와 옵션에 따라 가격이 달라지는 인디오더 제품을 구성합니다. 원하는 치수를 입력하면 상위 규격 부재를 절단해 쓰는 기준으로 세트 단가를 잡고,
+                면 구성·유리문·내천정·조명·커튼·방충망·연결부자재까지 항목별로 풀어서 보여줍니다. 단가는 타카쇼 PROEX2026 카탈로그 기준 원화 환산가입니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="form-grid porch-product-select">
+            <label class="field">
+              <span>특별제작품 선택</span>
+              <select id="specialProductSelect"></select>
+            </label>
+          </div>
+
+          <div class="porch-layout" id="porchConfigurator">
+            <form class="porch-form" id="porchForm" autocomplete="off">
+              <section class="porch-section">
+                <h4>기본 치수</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>정면 폭 (mm)</span>
+                    <input id="porchWidth" type="text" inputmode="numeric" value="3800">
+                  </label>
+                  <label class="field">
+                    <span>깊이 / 뒷길이 (mm)</span>
+                    <input id="porchDepth" type="text" inputmode="numeric" value="3100">
+                  </label>
+                  <label class="field">
+                    <span>높이</span>
+                    <select id="porchHeight"></select>
+                  </label>
+                  <label class="field">
+                    <span>프레임 색상</span>
+                    <select id="porchFrameColor"></select>
+                  </label>
+                  <label class="field">
+                    <span>지붕재</span>
+                    <select id="porchRoof"></select>
+                  </label>
+                  <label class="field">
+                    <span>유리문 타입</span>
+                    <select id="porchGlassType"></select>
+                  </label>
+                </div>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="porchOuterKey" type="checkbox">
+                    <span>외부키 사양 (유리문 면마다 가산)</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="porch-section">
+                <h4>면 구성 <small>각 면의 마감을 정하면 세트 타입과 스크린·벽면 가격이 자동 산출됩니다</small></h4>
+                <div class="porch-face-wrap">
+                  <table class="porch-face-table">
+                    <thead>
+                      <tr>
+                        <th>면</th>
+                        <th>마감</th>
+                      </tr>
+                    </thead>
+                    <tbody id="porchFaceTable"></tbody>
+                  </table>
+                </div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>벽면세트 보드 종류</span>
+                    <select id="porchWallBoardGrade"></select>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchFaceMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>플랩스크린 <small>본체 앞 전용 기둥에 서는 2장 1조 폴딩도어. 유리문 면을 포함해 모든 면에 추가할 수 있습니다</small></h4>
+                <div class="porch-face-wrap">
+                  <table class="porch-face-table">
+                    <thead>
+                      <tr>
+                        <th>면</th>
+                        <th>플랩스크린</th>
+                      </tr>
+                    </thead>
+                    <tbody id="porchFlapTable"></tbody>
+                  </table>
+                </div>
+                <div class="porch-media-row" id="porchFlapMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>비엔타 커튼 <small>설치할 면을 체크하면 생지 장수와 취부키트가 자동 산출됩니다</small></h4>
+                <div class="porch-form__toggles" id="porchCurtainFaces"></div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>커튼 색상</span>
+                    <select id="porchCurtainColor"></select>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchCurtainMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>방충망 <small>유리문 면에만 설치, 본체·고정부재·문받이틀 자동 산출</small></h4>
+                <div class="porch-form__toggles" id="porchScreenFaces"></div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>방충망 프레임 색상</span>
+                    <select id="porchScreenColor"></select>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchScreenMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>내천정 · 조명</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>내천정</span>
+                    <select id="porchCeilingType"></select>
+                  </label>
+                  <label class="field">
+                    <span>내천정 보드 색상</span>
+                    <select id="porchCeilingColor"></select>
+                  </label>
+                  <label class="field">
+                    <span>다운라이트</span>
+                    <select id="porchDownlight"></select>
+                  </label>
+                  <label class="field">
+                    <span>다운라이트 수량 (참고 배치 기준 자동)</span>
+                    <input id="porchDownlightQty" type="text" inputmode="numeric" value="8">
+                  </label>
+                </div>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="porchCeilingLine" type="checkbox">
+                    <span>내천정 라인라이트 사양</span>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchCeilingMedia"></div>
+                <div class="porch-media-row" id="porchDownlightMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>연결부자재 <small>사이즈에 맞춰 자동 선택</small></h4>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="porchGapAdjuster" type="checkbox">
+                    <span>틈새조정재 (건물 접속부)</span>
+                  </label>
+                  <label class="toggle-line">
+                    <input id="porchWallSpacer" type="checkbox">
+                    <span>벽기대기 부재 (지붕–외벽 틈새)</span>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchConnectMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>에버아트보드 추가</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>보드 종류</span>
+                    <select id="porchBoardGrade"></select>
+                  </label>
+                  <label class="field">
+                    <span>보드 규격</span>
+                    <select id="porchBoardSize"></select>
+                  </label>
+                  <label class="field">
+                    <span>수량 (장)</span>
+                    <input id="porchBoardQty" type="text" inputmode="numeric" value="0">
+                  </label>
+                </div>
+                <div class="porch-media-row" id="porchBoardMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>시공비 · 추가 옵션</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>시공비 (원)</span>
+                    <input id="porchInstallFee" type="text" inputmode="numeric">
+                  </label>
+                </div>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="porchInstallToggle" type="checkbox" checked>
+                    <span>시공비 포함</span>
+                  </label>
+                </div>
+                <div class="porch-custom">
+                  <span class="porch-custom__label">추가 옵션 수동 입력 (원화)</span>
+                  <div id="porchCustomOptions"></div>
+                </div>
+              </section>
+            </form>
+
+            <aside class="porch-result">
+              <div class="porch-result__spec">
+                <span>적용 규격</span>
+                <strong id="porchSpecSummary"></strong>
+              </div>
+              <div class="porch-warning" id="porchWarning" hidden></div>
+              <table class="porch-breakdown">
+                <thead>
+                  <tr>
+                    <th>구성 항목</th>
+                    <th>금액</th>
+                  </tr>
+                </thead>
+                <tbody id="porchBreakdown"></tbody>
+              </table>
+              <div class="porch-result__totals">
+                <div><span>자재 구성 합계</span><strong id="porchTotalKrw">0원</strong></div>
+                <div><span>시공비</span><strong id="porchInstallKrw">0원</strong></div>
+                <div class="is-accent"><span>최종 견적가</span><strong id="porchGrandTotal">0원</strong></div>
+              </div>
+              <button class="primary-button" id="porchAddButton" type="button">구성 그대로 장바구니에 담기</button>
+            </aside>
+          </div>
+        </section>
       </section>
 
       <section class="view" id="cartView">
@@ -257,5 +486,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="app.js"></script>
+  <script src="glassporch.js"></script>
 </body>
 </html>

@@ -83,6 +83,7 @@ const productImages = {
   "우드크리트": "assets/products/image35.png",
   "연속형 벤치": "assets/products/image36.png",
   "홈야드루프 / 글라스포치": "assets/products/image37.png",
+  "올글라스포치Ⅱ 슬라이드 시스템": "assets/products/image37.png",
   "에버아트 우드 / EVERART WOOD": "assets/products/image38.png",
   "센시아 휀스 / 세로 가는 격자": "assets/products/sensia-fence-vertical.png",
   "센시아 휀스 / 가로 격자": "assets/products/sensia-fence-horizontal.png",
@@ -135,6 +136,7 @@ const proposalCaseImages = {
   "연속형 벤치": ["assets/cases/case-37-2.png"],
   "홈야드루프 / 카야드 스타일": ["assets/cases/case-38-1.png", "assets/cases/case-38-2.png"],
   "홈야드루프 / 글라스포치": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
+  "올글라스포치Ⅱ 슬라이드 시스템": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
   "에버아트 보드 / EVERART BOARD": ["assets/cases/case-42-1.png", "assets/cases/case-42-2.png"],
   "에버아트 우드 / EVERART WOOD": ["assets/cases/case-43-1.png", "assets/cases/case-43-2.png"],
   "센시아 휀스 / 세로 가는 격자": ["assets/cases/case-45-2.png"],
@@ -328,8 +330,39 @@ const proposalDate = document.querySelector("#proposalDate");
 const proposalItemCount = document.querySelector("#proposalItemCount");
 const proposalGrandTotal = document.querySelector("#proposalGrandTotal");
 
+const CART_STORAGE_KEY = "inoex-quote-items-v1";
 const quoteItems = [];
 let proposalCaseIndex = 0;
+
+function saveQuoteItems() {
+  try {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(quoteItems));
+  } catch (error) {
+    // 저장 공간이 없거나 시크릿 모드인 경우는 조용히 무시합니다.
+  }
+}
+
+function loadQuoteItems() {
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    parsed.forEach((item) => {
+      if (
+        item
+        && typeof item.name === "string"
+        && Number.isFinite(item.quantity)
+        && Number.isFinite(item.materialAmount)
+        && Number.isFinite(item.installAmount)
+      ) {
+        quoteItems.push({ ...item, totalAmount: item.materialAmount + item.installAmount });
+      }
+    });
+  } catch (error) {
+    // 손상된 저장값은 무시하고 빈 장바구니로 시작합니다.
+  }
+}
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ko-KR").format(Math.round(value)) + "원";
@@ -635,6 +668,22 @@ function updatePreview() {
   renderPreviewImage(product);
 }
 
+function renderBreakdownList(item, className) {
+  if (!Array.isArray(item.breakdown) || !item.breakdown.length) {
+    return "";
+  }
+  return `
+    <ul class="${className}">
+      ${item.breakdown.map((line) => `
+        <li>
+          <span>${escapeHtml(line.label)}</span>
+          <strong>${formatCurrency(line.krw)}</strong>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
 function renderCartBadge() {
   cartBadge.textContent = String(quoteItems.length);
   selectedCount.textContent = String(quoteItems.length);
@@ -669,6 +718,7 @@ function renderCartList() {
           <div><span>규격</span><strong>${item.spec}</strong></div>
           <div><span>수량</span><strong>${formatNumber(item.quantity)} ${item.quantityUnit}</strong></div>
         </div>
+        ${renderBreakdownList(item, "cart-item__breakdown")}
       </div>
       <div class="cart-item__amount">
         <div><span>자재비</span><strong>${formatCurrency(item.materialAmount)}</strong></div>
@@ -702,6 +752,11 @@ function renderPrintQuote() {
       <td>${formatCurrency(item.installAmount)}</td>
       <td>${formatCurrency(item.totalAmount)}</td>
     </tr>
+    ${Array.isArray(item.breakdown) && item.breakdown.length ? `
+    <tr class="print-breakdown-row">
+      <td></td>
+      <td colspan="9">${renderBreakdownList(item, "print-breakdown")}</td>
+    </tr>` : ""}
   `).join("");
 }
 
@@ -952,6 +1007,7 @@ function renderProposal() {
               <span>${escapeHtml(item.category)}</span>
               <strong>${escapeHtml(item.name)}</strong>
               <p>${escapeHtml(item.materialLabel)} / ${escapeHtml(item.installLabel)}</p>
+              ${renderBreakdownList(item, "proposal-product__breakdown")}
             </div>
           </article>
         `).join("")}
@@ -979,6 +1035,18 @@ function renderProposal() {
             `).join("")}
           </div>
         </article>
+
+        <div class="proposal-case-grid">
+          ${cases.map((example) => `
+            <article>
+              <img src="${example.image}" alt="${escapeHtml(example.title)}">
+              <div>
+                <span>${escapeHtml(example.productName)}</span>
+                <strong>${escapeHtml(example.title)}</strong>
+              </div>
+            </article>
+          `).join("")}
+        </div>
       ` : `<div class="proposal-empty proposal-empty--small"></div>`}
     </section>
   `;
@@ -1071,7 +1139,8 @@ addButton.addEventListener("click", () => {
     totalAmount: materialAmount + installAmount
   });
 
-  quantityInput.value = quantityMeta.step === 1 ? "1" : "0.1";
+  quantityInput.value = "1";
+  saveQuoteItems();
   renderCartList();
   renderPrintQuote();
   updateTotals();
@@ -1080,6 +1149,7 @@ addButton.addEventListener("click", () => {
 
 resetButton.addEventListener("click", () => {
   quoteItems.length = 0;
+  saveQuoteItems();
   renderCartList();
   renderPrintQuote();
   updateTotals();
@@ -1157,7 +1227,7 @@ function downloadPdfElement(element, mode) {
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: {
           mode: ["css", "legacy"],
-          avoid: [".proposal-insight", ".proposal-product", ".proposal-case-slider", ".cart-item"]
+          avoid: [".proposal-insight", ".proposal-product", ".proposal-case-grid article", ".cart-item"]
         }
       })
       .from(clone)
@@ -1213,6 +1283,7 @@ cartList.addEventListener("click", (event) => {
 
   const index = Number(target.dataset.index);
   quoteItems.splice(index, 1);
+  saveQuoteItems();
   renderCartList();
   renderPrintQuote();
   updateTotals();
@@ -1260,6 +1331,7 @@ previewImage.addEventListener("error", () => {
   previewImagePlaceholder.hidden = false;
 });
 
+loadQuoteItems();
 buildCategories();
 renderProductOptions();
 renderPriceOptions();

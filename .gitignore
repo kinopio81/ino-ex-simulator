@@ -1,0 +1,7 @@
+*.log
+.DS_Store
+Thumbs.db
+.chrome-profile/
+.chrome-pdf-test/
+.pdf-test-downloads/
+__*.html
