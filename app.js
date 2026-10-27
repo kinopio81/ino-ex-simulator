@@ -675,9 +675,10 @@ function renderBreakdownList(item, className) {
   return `
     <ul class="${className}">
       ${item.breakdown.map((line) => `
-        <li>
+        <li class="${line.image ? "has-image" : ""}">
+          ${line.image ? `<img src="${line.image}" alt="">` : ""}
           <span>${escapeHtml(line.label)}</span>
-          <strong>${formatCurrency(line.krw)}</strong>
+          <strong>${line.included ? "포함" : formatCurrency(line.krw)}</strong>
         </li>
       `).join("")}
     </ul>

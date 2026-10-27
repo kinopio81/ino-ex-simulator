@@ -149,6 +149,7 @@ const PORCH_FLAP_OPTIONS = [
   { id: "board", label: "아트보드 (전면 가림)" }
 ];
 
+const SWATCH_IMG = OPT_IMG + "colors/";
 const PORCH_FRAME_COLORS = [
   { id: "brown_ebony", label: "브라운 에보니 (표준)", madeToOrder: false },
   { id: "dark_pine", label: "다크 파인 (표준)", madeToOrder: false },
@@ -161,7 +162,7 @@ const PORCH_FRAME_COLORS = [
   { id: "matte_light_grey", label: "매트 라이트 그레이 (주문생산)", madeToOrder: true },
   { id: "matte_white", label: "매트 화이트 (주문생산)", madeToOrder: true },
   { id: "rusty_copper", label: "러스티 코퍼 (주문생산)", madeToOrder: true }
-];
+].map((item) => ({ ...item, swatch: `${SWATCH_IMG}frame-${item.id}.jpg` }));
 
 const PORCH_ROOF_MATERIALS = [
   { id: "clear_matte", label: "클리어 매트 폴리카 (기본)" },
@@ -185,9 +186,18 @@ const PORCH_CEILING_TYPES = [
   { id: "vent", label: "내천정 통기구 타입 (결로 저감)" }
 ];
 const PORCH_CEILING_COLORS = [
-  "블랙 에보니", "브라운 에보니", "다크 파인", "오간우드 내추럴", "아카시아", "매트 블랙",
-  "자라", "자라 가는격자", "화이트 파인", "내추럴 파인", "트래버틴"
-];
+  { id: "black_ebony", label: "블랙 에보니" },
+  { id: "brown_ebony", label: "브라운 에보니" },
+  { id: "dark_pine", label: "다크 파인" },
+  { id: "organwood_natural", label: "오간우드 내추럴" },
+  { id: "acacia", label: "아카시아" },
+  { id: "matte_black", label: "매트 블랙" },
+  { id: "jarrah", label: "자라" },
+  { id: "jarrah_lattice", label: "자라 가는격자" },
+  { id: "white_pine", label: "화이트 파인" },
+  { id: "natural_pine", label: "내추럴 파인" },
+  { id: "travertine", label: "트래버틴" }
+].map((item) => ({ ...item, swatch: `${SWATCH_IMG}ceiling-${item.id}.jpg` }));
 
 // 내천정 추천 다운라이트 (P.1143, 엔/개). 트랜스는 제외.
 const PORCH_DOWNLIGHTS = [
@@ -522,8 +532,9 @@ function calculatePorch() {
   push({
     group: "마감",
     label: `프레임 색상 · ${frameColor.label}`,
-    detail: frameColor.madeToOrder ? "주문생산 색상, 납기 확인 필요 (가산 없음, 카탈로그 기준)" : "표준 색상",
-    included: true
+    detail: frameColor.madeToOrder ? "주문생산 색상, 납기 확인 필요 (가산 없음, 카탈로그 기준)" : "표준 색상 (P.1131)",
+    included: true,
+    image: frameColor.swatch
   });
 
   // ---- 내천정
@@ -533,15 +544,22 @@ function calculatePorch() {
   if (ceilingType === "std" || ceilingType === "vent") {
     hasCeiling = true;
     const entry = PORCH_CEILING[ceilingType][sizeKey];
-    const color = porchCeilingColorSelect.value;
+    const ceilingColor = PORCH_CEILING_COLORS.find((item) => item.id === porchCeilingColorSelect.value) || PORCH_CEILING_COLORS[0];
     push({
       group: "내천정",
-      label: `${ceilingType === "std" ? "내천정 표준" : "내천정 통기구 타입"}${lineLight ? " · 라인라이트 사양" : ""} · ${color}`,
+      label: `${ceilingType === "std" ? "내천정 표준" : "내천정 통기구 타입"}${lineLight ? " · 라인라이트 사양" : ""} · ${ceilingColor.label}`,
       detail: lineLight
         ? `에버아트보드 유닛 천정 + LED 라인라이트 ${entry.lineW} (전구색) · 트랜스·코드 별도 (P.1142)`
         : "에버아트보드 유닛 천정, 견절재 없는 구조 (P.1142)",
       krw: jpyToKrw(lineLight ? entry.line : entry.base),
       image: OPT_IMG + (lineLight ? "ceiling-linelight.jpg" : "ceiling.jpg")
+    });
+    push({
+      group: "내천정",
+      label: `내천정 보드 색상 · ${ceilingColor.label}`,
+      detail: "정번 컬러 (P.1142), 그 외 컬러는 별주 대응",
+      included: true,
+      image: ceilingColor.swatch
     });
     const ceilingGrade = PORCH_BOARD_GRADES.find((item) => item.id === porchCeilingBoardGradeSelect.value) || PORCH_BOARD_GRADES[0];
     const boardPlan = planCeilingBoards(width.step.actual, depth.step.actual, ceilingGrade);
@@ -808,6 +826,103 @@ function renderPorch() {
   porchAddButton.disabled = false;
 }
 
+/*
+  색상 스와치 피커: 숨긴 <select>를 값 저장소로 쓰고, 목록 항목에 커서를 올리면 커서 오른쪽에 칩 이미지를 띄운다.
+*/
+let swatchPreviewEl = null;
+function getSwatchPreview() {
+  if (!swatchPreviewEl) {
+    swatchPreviewEl = document.createElement("div");
+    swatchPreviewEl.className = "swatch-preview";
+    swatchPreviewEl.hidden = true;
+    swatchPreviewEl.innerHTML = `<img alt=""><span></span>`;
+    document.body.append(swatchPreviewEl);
+  }
+  return swatchPreviewEl;
+}
+function moveSwatchPreview(event) {
+  const preview = getSwatchPreview();
+  const offset = 18;
+  const maxX = window.innerWidth - preview.offsetWidth - 12;
+  const maxY = window.innerHeight - preview.offsetHeight - 12;
+  preview.style.left = `${Math.min(event.clientX + offset, maxX)}px`;
+  preview.style.top = `${Math.min(Math.max(event.clientY - preview.offsetHeight / 2, 12), maxY)}px`;
+}
+function createSwatchPicker(selectEl, options) {
+  selectEl.hidden = true;
+  selectEl.classList.add("swatch-picker__native");
+  const picker = document.createElement("div");
+  picker.className = "swatch-picker";
+  picker.innerHTML = `
+    <button type="button" class="swatch-picker__button" aria-haspopup="listbox" aria-expanded="false">
+      <img class="swatch-picker__chip" alt="">
+      <span class="swatch-picker__label"></span>
+      <i class="swatch-picker__caret" aria-hidden="true"></i>
+    </button>
+    <ul class="swatch-picker__list" role="listbox" hidden>
+      ${options.map((item) => `
+        <li role="option" data-value="${item.id}" data-swatch="${item.swatch}" data-label="${escapeHtml(item.label)}">
+          <img src="${item.swatch}" alt="">
+          <span>${escapeHtml(item.label)}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+  selectEl.insertAdjacentElement("afterend", picker);
+  const button = picker.querySelector(".swatch-picker__button");
+  const list = picker.querySelector(".swatch-picker__list");
+  const chip = picker.querySelector(".swatch-picker__chip");
+  const label = picker.querySelector(".swatch-picker__label");
+
+  const sync = () => {
+    const current = options.find((item) => item.id === selectEl.value) || options[0];
+    chip.src = current.swatch;
+    label.textContent = current.label;
+    list.querySelectorAll("li").forEach((li) => li.classList.toggle("is-selected", li.dataset.value === current.id));
+  };
+  const close = () => {
+    list.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    getSwatchPreview().hidden = true;
+  };
+  button.addEventListener("click", () => {
+    const willOpen = list.hidden;
+    document.querySelectorAll(".swatch-picker__list").forEach((other) => { other.hidden = true; });
+    list.hidden = !willOpen;
+    button.setAttribute("aria-expanded", String(willOpen));
+  });
+  list.addEventListener("mouseover", (event) => {
+    const li = event.target.closest("li[data-value]");
+    if (!li) return;
+    const preview = getSwatchPreview();
+    preview.querySelector("img").src = li.dataset.swatch;
+    preview.querySelector("span").textContent = li.dataset.label;
+    preview.hidden = false;
+    moveSwatchPreview(event);
+  });
+  list.addEventListener("mousemove", (event) => {
+    if (!getSwatchPreview().hidden) moveSwatchPreview(event);
+  });
+  list.addEventListener("mouseleave", () => { getSwatchPreview().hidden = true; });
+  list.addEventListener("click", (event) => {
+    const li = event.target.closest("li[data-value]");
+    if (!li) return;
+    selectEl.value = li.dataset.value;
+    sync();
+    close();
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  document.addEventListener("click", (event) => {
+    if (!picker.contains(event.target)) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+  selectEl.addEventListener("change", sync);
+  sync();
+  return picker;
+}
+
 function buildSpecialProductSelect() {
   specialProductSelect.innerHTML = SPECIAL_PRODUCTS
     .map((product) => `<option value="${product.id}">${product.label}</option>`)
@@ -826,9 +941,11 @@ function buildPorchForm() {
   porchHeightSelect.innerHTML = PORCH_SIZE_STEPS.height.map((step) => option(step.key, `${formatNumber(step.mm)}mm`)).join("");
   porchGlassTypeSelect.innerHTML = PORCH_GLASS_TYPES.map((item) => option(item.id, item.label)).join("");
   porchFrameColorSelect.innerHTML = PORCH_FRAME_COLORS.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchFrameColorSelect, PORCH_FRAME_COLORS);
   porchRoofSelect.innerHTML = PORCH_ROOF_MATERIALS.map((item) => option(item.id, item.label)).join("");
   porchCeilingTypeSelect.innerHTML = PORCH_CEILING_TYPES.map((item) => option(item.id, item.label)).join("");
-  porchCeilingColorSelect.innerHTML = PORCH_CEILING_COLORS.map((color) => option(color, color)).join("");
+  porchCeilingColorSelect.innerHTML = PORCH_CEILING_COLORS.map((item) => option(item.id, item.label)).join("");
+  createSwatchPicker(porchCeilingColorSelect, PORCH_CEILING_COLORS);
   porchDownlightSelect.innerHTML = PORCH_DOWNLIGHTS.map((item) => option(item.id, item.label)).join("");
   porchCurtainColorSelect.innerHTML = PORCH_CURTAIN.colors.map((color) => option(color, color)).join("");
   porchScreenColorSelect.innerHTML = PORCH_SCREEN_DOOR.frameColors.map((color) => option(color, color)).join("");
@@ -920,8 +1037,8 @@ porchAddButton.addEventListener("click", () => {
     installAmount: result.installFee,
     totalAmount: result.total,
     breakdown: result.lines
-      .filter((line) => !line.included)
-      .map((line) => ({ label: line.label, krw: line.krw }))
+      .filter((line) => !line.included || line.image)
+      .map((line) => ({ label: line.label, krw: line.krw, included: !!line.included, image: line.image || "" }))
   });
 
   saveQuoteItems();
