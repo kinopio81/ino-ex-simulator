@@ -242,30 +242,35 @@ const PORCH_BOARD_SIZES = [
   { id: "b2440", label: "910×2440 (3mm)" }
 ];
 
-// 벽면세트 보드 산출 (기본): 910×2440 보드를 세워 1단 시공. 길이 ÷ 910 올림 장수, 표리 양면.
-// 마지막 장의 자투리(폭 = 장수×910 − 길이)는 높이 부족분 견절재(마감재)로 재활용하고, 모자라면 보드를 추가한다.
-const PORCH_WALL_HEIGHT = { H25: 2300, H27: 2500 };
-function planWallBoards(lengthMm, heightMm, grade) {
-  const perSide = Math.ceil(lengthMm / 910);
-  const offcutWidth = perSide * 910 - lengthMm; // 한 면당 자투리 폭
-  const shortfall = Math.max(0, heightMm - 2440); // 높이 부족분 (견절재 높이)
-  const trimAreaNeeded = shortfall * lengthMm * 2; // 양면 견절재 면적
-  const offcutArea = offcutWidth * 2440 * 2; // 양면 자투리 면적
-  let extraBoards = 0;
-  if (trimAreaNeeded > offcutArea) {
-    extraBoards = Math.ceil((trimAreaNeeded - offcutArea) / (910 * 2440));
+// 내천정 보드 산출: 천정 면적(본체 실치수 정면 × 깊이)을 910×2440 보드 면적으로 나눠 올림.
+// 일반 보드는 내천정 유닛 가격에 포함. 시크 / 레조넌스는 카탈로그상 별도 문의 항목이라 장당 차액으로 추정한다.
+function planCeilingBoards(widthMm, depthMm, grade) {
+  const areaMm2 = widthMm * depthMm;
+  const boardArea = 910 * 2440;
+  const count = Math.ceil(areaMm2 / boardArea);
+  const basic = PORCH_BOARD_GRADES[0];
+  const diffPerBoard = Math.max(0, grade.sizes.b2440 - basic.sizes.b2440);
+  return { areaM2: areaMm2 / 1e6, count, diffPerBoard, jpy: diffPerBoard * count };
+}
+
+// 다운라이트 수량 산정 기준. 카탈로그 참고 배치(P.1152)는 다운라이트 3형(155lm) 기준으로
+// 면적 8~15㎡에서 65~83lx가 나오며, 램프 1개가 약 93 lx·㎡를 만든다. 다른 기종은 광속 비율로 환산한다.
+const PORCH_LUX_PER_LAMP_3 = 93;
+const PORCH_DOWNLIGHT_LUMEN = { dl2: 350, dl3g: 155, dl3b: 155, dl5: 145 };
+const PORCH_DOWNLIGHT_MODES = [
+  { id: "manual", label: "직접 입력" },
+  { id: "catalog", label: "카탈로그 참고 배치 (내천정 패널당 1개)" },
+  { id: "lx50", label: "휴식·일반 기준 약 50lx", lux: 50 },
+  { id: "lx100", label: "식사·파티 기준 약 100lx", lux: 100 }
+];
+function recommendDownlights(mode, widthKey, areaM2, downlightId) {
+  if (mode.id === "catalog") {
+    return { qty: PORCH_DOWNLIGHT_DEFAULT[widthKey], note: `참고 배치 ${PORCH_DOWNLIGHT_DEFAULT[widthKey]}개 (P.1152)` };
   }
-  const count = perSide * 2 + extraBoards;
-  return {
-    perSide,
-    count,
-    offcutWidth,
-    shortfall,
-    trimAreaNeeded,
-    offcutArea,
-    extraBoards,
-    jpy: grade.sizes.b2440 * count
-  };
+  const lumen = PORCH_DOWNLIGHT_LUMEN[downlightId] || 155;
+  const luxPerLamp = PORCH_LUX_PER_LAMP_3 * (lumen / 155);
+  const qty = Math.max(1, Math.ceil(mode.lux * areaM2 / luxPerLamp));
+  return { qty, note: `면적 ${areaM2.toFixed(1)}㎡ × 목표 ${mode.lux}lx ÷ 램프당 약 ${Math.round(luxPerLamp)}lx·㎡ = ${qty}개` };
 }
 
 const PORCH_PRODUCT_NAME = "올글라스포치Ⅱ 슬라이드 시스템";
@@ -284,7 +289,6 @@ const porchGlassTypeSelect = $("#porchGlassType");
 const porchOuterKeyToggle = $("#porchOuterKey");
 const porchFaceTable = $("#porchFaceTable");
 const porchFaceMedia = $("#porchFaceMedia");
-const porchWallBoardGradeSelect = $("#porchWallBoardGrade");
 const porchFlapTable = $("#porchFlapTable");
 const porchFlapMedia = $("#porchFlapMedia");
 const porchFrameColorSelect = $("#porchFrameColor");
@@ -293,6 +297,9 @@ const porchCeilingTypeSelect = $("#porchCeilingType");
 const porchCeilingLineToggle = $("#porchCeilingLine");
 const porchCeilingColorSelect = $("#porchCeilingColor");
 const porchCeilingMedia = $("#porchCeilingMedia");
+const porchCeilingBoardGradeSelect = $("#porchCeilingBoardGrade");
+const porchDownlightModeSelect = $("#porchDownlightMode");
+const porchDownlightHint = $("#porchDownlightHint");
 const porchDownlightSelect = $("#porchDownlight");
 const porchDownlightQtyInput = $("#porchDownlightQty");
 const porchDownlightMedia = $("#porchDownlightMedia");
@@ -320,7 +327,6 @@ const porchGrandTotal = $("#porchGrandTotal");
 const porchAddButton = $("#porchAddButton");
 const porchWarning = $("#porchWarning");
 
-let porchDownlightQtyTouched = false;
 
 function jpyToKrw(value) {
   return Math.round(value * JPY_TO_KRW);
@@ -471,35 +477,16 @@ function calculatePorch() {
   }
 
   // ---- 면 마감 (벽면세트 / 슬라이드스크린)
-  const wallGrade = PORCH_BOARD_GRADES.find((item) => item.id === porchWallBoardGradeSelect.value) || PORCH_BOARD_GRADES[0];
   faces.forEach((face) => {
     const axisKey = face.axis === "W" ? wk : dk;
     const faceLabel = `${face.label} (${faceSizeLabel(face)})`;
     if (face.finish === "wall") {
       push({
         group: "면 구성",
-        label: `벽면세트 프레임 · ${faceLabel}`,
-        detail: "해당 면 유리문 대신 설치 (세트 가격에서 이 면 유리문 제외됨) · 견절재·알루미늄 프레임, 전 부재 절단·타공 가공품, 보드 별도 산출 (P.1137)",
+        label: `벽면세트 · ${faceLabel}`,
+        detail: "해당 면 유리문 대신 설치 (세트 가격에서 이 면 유리문 제외됨) · 에버아트보드 표리 양면 + 견절재·알루미늄 프레임 포함, 전 부재 절단·타공 가공품 (P.1137)",
         krw: jpyToKrw(PORCH_WALL_SET[face.axis][axisKey][heightKey]),
         image: OPT_IMG + "wall-set.jpg"
-      });
-      const lengthMm = faceMm(face);
-      const wallHeight = PORCH_WALL_HEIGHT[heightKey];
-      const plan = planWallBoards(lengthMm, wallHeight, wallGrade);
-      let trimNote;
-      if (!plan.shortfall) {
-        trimNote = `자투리 폭 ${formatNumber(plan.offcutWidth)}mm × 2,440 (면당 1장분) 발생 → 견절재·코너 마감에 재활용`;
-      } else if (!plan.extraBoards) {
-        trimNote = `높이 ${formatNumber(wallHeight)}mm 대비 부족 ${plan.shortfall}mm 견절재(양면 ${(plan.trimAreaNeeded / 1e6).toFixed(2)}㎡)는 자투리(폭 ${formatNumber(plan.offcutWidth)}mm, 양면 ${(plan.offcutArea / 1e6).toFixed(2)}㎡)로 충당 → 추가 보드 없음`;
-      } else {
-        trimNote = `높이 부족 ${plan.shortfall}mm 견절재(양면 ${(plan.trimAreaNeeded / 1e6).toFixed(2)}㎡) > 자투리(${(plan.offcutArea / 1e6).toFixed(2)}㎡) → 보드 ${plan.extraBoards}장 추가`;
-      }
-      push({
-        group: "면 구성",
-        label: `벽면 보드 · ${face.label} ${wallGrade.label} 910×2440 ${plan.count}장`,
-        detail: `길이 ${formatNumber(lengthMm)}mm ÷ 910 → 면당 ${plan.perSide}장 세워 1단 × 표리 2면${plan.extraBoards ? ` + 견절재용 ${plan.extraBoards}장` : ""} · 장당 ${formatCurrency(jpyToKrw(wallGrade.sizes.b2440))} · ${trimNote}`,
-        krw: jpyToKrw(plan.jpy),
-        image: OPT_IMG + "everart-board.jpg"
       });
     } else if (face.finish === "slideTextile" || face.finish === "slideBoard") {
       const kind = face.finish === "slideTextile" ? "textile" : "board";
@@ -556,17 +543,36 @@ function calculatePorch() {
       krw: jpyToKrw(lineLight ? entry.line : entry.base),
       image: OPT_IMG + (lineLight ? "ceiling-linelight.jpg" : "ceiling.jpg")
     });
+    const ceilingGrade = PORCH_BOARD_GRADES.find((item) => item.id === porchCeilingBoardGradeSelect.value) || PORCH_BOARD_GRADES[0];
+    const boardPlan = planCeilingBoards(width.step.actual, depth.step.actual, ceilingGrade);
+    push({
+      group: "내천정",
+      label: `내천정 보드 · ${ceilingGrade.label} 910×2440 ${boardPlan.count}장${ceilingGrade.id === "basic" ? "" : " 차액"}`,
+      detail: `천정 면적 ${formatNumber(width.step.actual)} × ${formatNumber(depth.step.actual)}mm = ${boardPlan.areaM2.toFixed(2)}㎡ ÷ 보드 2.22㎡ → ${boardPlan.count}장`
+        + (ceilingGrade.id === "basic"
+          ? " · 일반 보드는 내천정 유닛 가격에 포함"
+          : ` · 시크 시리즈는 카탈로그 별도 문의 항목이라 장당 차액 ${formatCurrency(jpyToKrw(boardPlan.diffPerBoard))} × ${boardPlan.count}장으로 추정 (P.331)`),
+      krw: jpyToKrw(boardPlan.jpy),
+      included: ceilingGrade.id === "basic",
+      verify: ceilingGrade.id !== "basic",
+      image: OPT_IMG + "everart-board.jpg"
+    });
   }
 
   // ---- 다운라이트
   const downlight = PORCH_DOWNLIGHTS.find((item) => item.id === porchDownlightSelect.value) || PORCH_DOWNLIGHTS[0];
   if (downlight.id !== "none") {
     const qty = Math.max(1, Math.round(porchReadNumber(porchDownlightQtyInput, PORCH_DOWNLIGHT_DEFAULT[wk])));
+    const mode = PORCH_DOWNLIGHT_MODES.find((item) => item.id === porchDownlightModeSelect.value) || PORCH_DOWNLIGHT_MODES[0];
+    const areaM2 = width.step.actual * depth.step.actual / 1e6;
+    const modeNote = mode.id === "manual"
+      ? `직접 입력 (참고 배치 ${PORCH_DOWNLIGHT_DEFAULT[wk]}개, P.1152)`
+      : recommendDownlights(mode, wk, areaM2, downlight.id).note;
     if (!hasCeiling) warnings.push("다운라이트는 내천정 패널에 매립 설치됩니다. 내천정을 함께 선택해 주세요.");
     push({
       group: "조명",
       label: `${downlight.label} × ${qty}개`,
-      detail: `내천정 추천 다운라이트 (P.1143) · 참고 배치 ${PORCH_DOWNLIGHT_DEFAULT[wk]}개 기준 (P.1152) · 트랜스·배선 별도`,
+      detail: `내천정 추천 다운라이트 (P.1143) · 수량 산정: ${modeNote} · 트랜스·배선 별도`,
       krw: jpyToKrw(downlight.jpy * qty),
       image: downlight.image
     });
@@ -715,7 +721,7 @@ function renderMedia() {
   const glassType = PORCH_GLASS_TYPES.find((item) => item.id === porchGlassTypeSelect.value);
   porchFaceMedia.innerHTML = (glassType && glassType.image ? mediaMarkup(glassType.image, glassType.label) : "")
     + usedFinishes.map((finish) => mediaMarkup(finish.image, finish.label)).join("")
-    + (faces.some((face) => face.finish === "wall") ? mediaMarkup(OPT_IMG + "everart-board.jpg", "벽면 에버아트보드") : "");
+;
 
   porchFlapMedia.innerHTML = faces.some((face) => face.flap !== "none") ? mediaMarkup(OPT_IMG + "flap-screen.jpg", "플랩스크린") : "";
 
@@ -738,10 +744,26 @@ function renderMedia() {
 
 function syncDownlightDefault() {
   const width = porchPickStep("width", porchReadNumber(porchWidthInput, 3000));
-  if (!width.over && !porchDownlightQtyTouched) {
-    porchDownlightQtyInput.value = String(PORCH_DOWNLIGHT_DEFAULT[width.step.key]);
+  const depth = porchPickStep("depth", porchReadNumber(porchDepthInput, 2400));
+  const mode = PORCH_DOWNLIGHT_MODES.find((item) => item.id === porchDownlightModeSelect.value) || PORCH_DOWNLIGHT_MODES[0];
+  const noLight = porchDownlightSelect.value === "none";
+  porchDownlightModeSelect.disabled = noLight;
+  if (noLight || width.over || depth.over) {
+    porchDownlightQtyInput.disabled = true;
+    porchDownlightHint.textContent = "";
+    return;
   }
-  porchDownlightQtyInput.disabled = porchDownlightSelect.value === "none";
+  const areaM2 = width.step.actual * depth.step.actual / 1e6;
+  const hints = PORCH_DOWNLIGHT_MODES.filter((item) => item.id !== "manual")
+    .map((item) => `${item.label.split(" (")[0]} ${recommendDownlights(item, width.step.key, areaM2, porchDownlightSelect.value).qty}개`);
+  porchDownlightHint.textContent = `천정 면적 ${areaM2.toFixed(1)}㎡ 기준 추천: ${hints.join(" · ")}`;
+  if (mode.id === "manual") {
+    porchDownlightQtyInput.disabled = false;
+    if (!porchDownlightQtyInput.value) porchDownlightQtyInput.value = String(PORCH_DOWNLIGHT_DEFAULT[width.step.key]);
+  } else {
+    porchDownlightQtyInput.disabled = true;
+    porchDownlightQtyInput.value = String(recommendDownlights(mode, width.step.key, areaM2, porchDownlightSelect.value).qty);
+  }
 }
 
 function renderPorch() {
@@ -812,7 +834,9 @@ function buildPorchForm() {
   porchScreenColorSelect.innerHTML = PORCH_SCREEN_DOOR.frameColors.map((color) => option(color, color)).join("");
   porchBoardSelect.innerHTML = PORCH_BOARD_SIZES.map((item) => option(item.id, item.label)).join("");
   porchBoardGradeSelect.innerHTML = PORCH_BOARD_GRADES.map((item) => option(item.id, item.label)).join("");
-  porchWallBoardGradeSelect.innerHTML = PORCH_BOARD_GRADES.map((item) => option(item.id, item.label)).join("");
+  porchCeilingBoardGradeSelect.innerHTML = PORCH_BOARD_GRADES.map((item) => option(item.id, item.label)).join("");
+  porchDownlightModeSelect.innerHTML = PORCH_DOWNLIGHT_MODES.map((item) => option(item.id, item.label)).join("");
+  porchDownlightModeSelect.value = "catalog";
 
   const defaults = { front: "glass", back: "open", left: "glass", right: "glass" };
   porchFaceTable.innerHTML = PORCH_FACES.map((face) => `
@@ -858,8 +882,6 @@ specialProductSelect.addEventListener("change", () => showSpecialProduct(special
 porchForm.addEventListener("input", renderPorch);
 porchForm.addEventListener("change", renderPorch);
 porchForm.addEventListener("submit", (event) => event.preventDefault());
-porchDownlightQtyInput.addEventListener("input", () => { porchDownlightQtyTouched = true; });
-porchWidthInput.addEventListener("input", () => { porchDownlightQtyTouched = false; });
 
 porchAddButton.addEventListener("click", () => {
   const result = calculatePorch();

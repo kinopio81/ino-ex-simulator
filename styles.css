@@ -1312,6 +1312,17 @@ img {
   height: 18px;
 }
 
+.porch-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.porch-hint:empty {
+  display: none;
+}
+
 .porch-media-row {
   display: flex;
   flex-wrap: wrap;

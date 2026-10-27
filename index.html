@@ -213,12 +213,6 @@
                     <tbody id="porchFaceTable"></tbody>
                   </table>
                 </div>
-                <div class="form-grid porch-form__grid porch-form__grid--tight">
-                  <label class="field">
-                    <span>벽면세트 보드 종류</span>
-                    <select id="porchWallBoardGrade"></select>
-                  </label>
-                </div>
                 <div class="porch-media-row" id="porchFaceMedia"></div>
               </section>
 
@@ -274,14 +268,23 @@
                     <select id="porchCeilingColor"></select>
                   </label>
                   <label class="field">
+                    <span>내천정 보드 종류 (면적으로 장수 산출)</span>
+                    <select id="porchCeilingBoardGrade"></select>
+                  </label>
+                  <label class="field">
                     <span>다운라이트</span>
                     <select id="porchDownlight"></select>
                   </label>
                   <label class="field">
-                    <span>다운라이트 수량 (참고 배치 기준 자동)</span>
+                    <span>수량 산정 기준</span>
+                    <select id="porchDownlightMode"></select>
+                  </label>
+                  <label class="field">
+                    <span>다운라이트 수량</span>
                     <input id="porchDownlightQty" type="text" inputmode="numeric" value="8">
                   </label>
                 </div>
+                <p class="porch-hint" id="porchDownlightHint"></p>
                 <div class="porch-form__toggles">
                   <label class="toggle-line">
                     <input id="porchCeilingLine" type="checkbox">
