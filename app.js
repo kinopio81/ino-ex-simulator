@@ -84,6 +84,7 @@ const productImages = {
   "연속형 벤치": "assets/products/image36.png",
   "홈야드루프 / 글라스포치": "assets/products/image37.png",
   "올글라스포치Ⅱ 슬라이드 시스템": "assets/products/image37.png",
+  "홈야드루프Ⅱ": "assets/options/homeyard-roof.jpg",
   "에버아트 우드 / EVERART WOOD": "assets/products/image38.png",
   "센시아 휀스 / 세로 가는 격자": "assets/products/sensia-fence-vertical.png",
   "센시아 휀스 / 가로 격자": "assets/products/sensia-fence-horizontal.png",
@@ -137,6 +138,7 @@ const proposalCaseImages = {
   "홈야드루프 / 카야드 스타일": ["assets/cases/case-38-1.png", "assets/cases/case-38-2.png"],
   "홈야드루프 / 글라스포치": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
   "올글라스포치Ⅱ 슬라이드 시스템": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
+  "홈야드루프Ⅱ": ["assets/cases/case-38-1.png", "assets/cases/case-38-2.png"],
   "에버아트 보드 / EVERART BOARD": ["assets/cases/case-42-1.png", "assets/cases/case-42-2.png"],
   "에버아트 우드 / EVERART WOOD": ["assets/cases/case-43-1.png", "assets/cases/case-43-2.png"],
   "센시아 휀스 / 세로 가는 격자": ["assets/cases/case-45-2.png"],
@@ -774,7 +776,7 @@ function getQuoteTotals() {
 function getProposalInsights() {
   const hasTile = quoteItems.some((item) => item.category.includes("포세린 타일"));
   const hasWater = quoteItems.some((item) => item.category.includes("수전"));
-  const hasShade = quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치") || item.name.includes("카야드"));
+  const hasShade = quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치") || item.name.includes("카야드") || item.name.includes("홈야드루프"));
   const hasSeating = quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치"));
   const hasWoodcrete = quoteItems.some((item) => item.name.includes("우드크리트"));
   const hasLighting = quoteItems.some((item) => item.category.includes("LED조명"));
@@ -926,7 +928,7 @@ function getProposalMaterialTags() {
 
   addTag(quoteItems.some((item) => item.category.includes("포세린 타일")), "Porcelain Surface");
   addTag(quoteItems.some((item) => item.category.includes("수전")), "Water Object");
-  addTag(quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치")), "Shade Structure");
+  addTag(quoteItems.some((item) => item.name.includes("셰이드") || item.name.includes("파고라") || item.name.includes("글라스포치") || item.name.includes("홈야드루프")), "Shade Structure");
   addTag(quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치")), "Outdoor Living");
   addTag(quoteItems.some((item) => item.category.includes("LED조명")), "Low Light");
   addTag(quoteItems.some((item) => item.name.includes("우드") || item.name.includes("우드크리트")), "Warm Texture");

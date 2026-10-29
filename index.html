@@ -150,7 +150,7 @@
               <h3>특별제작품 구성</h3>
               <p class="porch-panel__text">
                 치수와 옵션에 따라 가격이 달라지는 인디오더 제품을 구성합니다. 원하는 치수를 입력하면 상위 규격 부재를 절단해 쓰는 기준으로 세트 단가를 잡고,
-                면 구성·유리문·내천정·조명·커튼·방충망·연결부자재까지 항목별로 풀어서 보여줍니다. 단가는 타카쇼 PROEX2026 카탈로그 기준 원화 환산가입니다.
+                면 구성·유리문·내천정·조명·커튼·방충망·연결부자재까지 항목별로 풀어서 보여줍니다. 유리면이 없는 지붕 구조물은 "홈야드루프Ⅱ"를 선택하세요. 단가는 타카쇼 PROEX2026 카탈로그 기준 원화 환산가입니다.
               </p>
             </div>
           </div>
@@ -379,6 +379,168 @@
               <button class="primary-button" id="porchAddButton" type="button">구성 그대로 장바구니에 담기</button>
             </aside>
           </div>
+
+          <div class="porch-layout" id="hyrConfigurator" hidden>
+            <form class="porch-form" id="hyrForm" autocomplete="off">
+              <section class="porch-section">
+                <h4>기본 치수 <small>요청 치수 이상인 카탈로그 규격 중 가장 싼 조합을 고르고, 큰 부재를 절단해 씁니다</small></h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>폭 · 기둥 간격 (mm)</span>
+                    <input id="hyrWidth" type="text" inputmode="numeric" value="2000">
+                  </label>
+                  <label class="field">
+                    <span>길이 (mm)</span>
+                    <input id="hyrLength" type="text" inputmode="numeric" value="3000">
+                  </label>
+                  <label class="field">
+                    <span>높이 · 기둥</span>
+                    <select id="hyrHeight"></select>
+                  </label>
+                  <label class="field">
+                    <span>설치 타입</span>
+                    <select id="hyrMount"></select>
+                  </label>
+                  <label class="field">
+                    <span>지붕 사양</span>
+                    <select id="hyrRoofPref"></select>
+                  </label>
+                  <label class="field">
+                    <span>지붕재</span>
+                    <select id="hyrRoof"></select>
+                  </label>
+                  <label class="field">
+                    <span>본체 색상</span>
+                    <select id="hyrColor"></select>
+                  </label>
+                </div>
+              </section>
+
+              <section class="porch-section">
+                <h4>내천정 · 조명</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>내천정</span>
+                    <select id="hyrCeilingType"></select>
+                  </label>
+                  <label class="field">
+                    <span>내천정 보드 종류</span>
+                    <select id="hyrCeilingGrade"></select>
+                  </label>
+                  <label class="field">
+                    <span>내천정 보드 색상</span>
+                    <select id="hyrCeilingColor"></select>
+                  </label>
+                  <label class="field">
+                    <span>다운라이트</span>
+                    <select id="hyrDownlight"></select>
+                  </label>
+                  <label class="field">
+                    <span>수량 산정 기준</span>
+                    <select id="hyrDownlightMode"></select>
+                  </label>
+                  <label class="field">
+                    <span>다운라이트 수량</span>
+                    <input id="hyrDownlightQty" type="text" inputmode="numeric" value="4">
+                  </label>
+                </div>
+                <p class="porch-hint" id="hyrDownlightHint"></p>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="hyrCeilingLine" type="checkbox">
+                    <span>내천정 라인라이트 사양 (길이 4,000 이상)</span>
+                  </label>
+                  <label class="toggle-line">
+                    <input id="hyrLightingFace" type="checkbox">
+                    <span>라이팅 페이스 (도리 4변 발광)</span>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="hyrCeilingMedia"></div>
+                <div class="porch-media-row" id="hyrDownlightMedia"></div>
+                <div class="porch-media-row" id="hyrLightingMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>기둥 · 셰이드 · 디자인 패널</h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>이동주 100각 (본)</span>
+                    <input id="hyrMovingPost" type="text" inputmode="numeric" value="0">
+                  </label>
+                  <label class="field">
+                    <span>이 중 세로 홈통 기둥 (본)</span>
+                    <input id="hyrMovingPostGutter" type="text" inputmode="numeric" value="0">
+                  </label>
+                  <label class="field">
+                    <span>로프식 개폐 셰이드</span>
+                    <select id="hyrShade"></select>
+                  </label>
+                  <label class="field">
+                    <span>캔버스 생지 색상</span>
+                    <select id="hyrShadeColor"></select>
+                  </label>
+                  <label class="field">
+                    <span>천면용 디자인 패널</span>
+                    <select id="hyrPanel"></select>
+                  </label>
+                  <label class="field">
+                    <span>디자인 패널 수량 (장)</span>
+                    <input id="hyrPanelQty" type="text" inputmode="numeric" value="0">
+                  </label>
+                </div>
+                <div class="porch-media-row" id="hyrShadeMedia"></div>
+                <div class="porch-media-row" id="hyrPanelMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>연결부자재 · 시공비 · 추가 옵션</h4>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="hyrWallSpacer" type="checkbox">
+                    <span>벽기대기 부재 (지붕–외벽 틈새, 벽부착형)</span>
+                  </label>
+                  <label class="toggle-line">
+                    <input id="hyrInstallToggle" type="checkbox" checked>
+                    <span>시공비 포함</span>
+                  </label>
+                </div>
+                <div class="porch-media-row" id="hyrConnectMedia"></div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>시공비 (원)</span>
+                    <input id="hyrInstallFee" type="text" inputmode="numeric">
+                  </label>
+                </div>
+                <div class="porch-custom">
+                  <span class="porch-custom__label">추가 옵션 수동 입력 (원화)</span>
+                  <div id="hyrCustomOptions"></div>
+                </div>
+              </section>
+            </form>
+
+            <aside class="porch-result">
+              <div class="porch-result__spec">
+                <span>적용 규격</span>
+                <strong id="hyrSpecSummary"></strong>
+              </div>
+              <div class="porch-warning" id="hyrWarning" hidden></div>
+              <table class="porch-breakdown">
+                <thead>
+                  <tr>
+                    <th>구성 항목</th>
+                    <th>금액</th>
+                  </tr>
+                </thead>
+                <tbody id="hyrBreakdown"></tbody>
+              </table>
+              <div class="porch-result__totals">
+                <div><span>자재 구성 합계</span><strong id="hyrTotalKrw">0원</strong></div>
+                <div><span>시공비</span><strong id="hyrInstallKrw">0원</strong></div>
+                <div class="is-accent"><span>최종 견적가</span><strong id="hyrGrandTotal">0원</strong></div>
+              </div>
+              <button class="primary-button" id="hyrAddButton" type="button">구성 그대로 장바구니에 담기</button>
+            </aside>
+          </div>
         </section>
       </section>
 
@@ -496,5 +658,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="app.js"></script>
   <script src="glassporch.js"></script>
+  <script src="homeyardroof.js"></script>
 </body>
 </html>

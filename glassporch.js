@@ -48,7 +48,7 @@ const PORCH_LAYOUT_LABELS = {
   frontSide: "정면 + 측면 1면",
   side2: "측면 2면",
   all4: "4면 전체",
-  roof: "유리면 없음 · 홈야드루프Ⅱ 유사 규격"
+  roof: "유리면 없음"
 };
 
 // 세트 가격표 (엔). key: depth-width. heatCut = 지붕 브라운 스모크(열선컷) 폴리카 가산액
@@ -150,43 +150,6 @@ const PORCH_FLAP_OPTIONS = [
   { id: "board", label: "아트보드 (전면 가림)", swatch: OPT_IMG + "flap-board.jpg" }
 ];
 
-/*
-  홈야드루프Ⅱ (P.1166 독립형 싱글/더블, P.1167 벽부착형). 유리면이 한 면도 없는 구성은 사실상 지붕 구조물이므로
-  요청 치수보다 큰 유사 규격의 홈야드루프Ⅱ 가격을 적용한다. roofW = 기둥 간격(폭), L = 길이, 높이 = 기둥 높이.
-  값: [H24, H30, H37, 열선컷 가산] (엔)
-*/
-const HYR_HEIGHTS = [{ key: "H24", mm: 2450, label: "높이 2,450" }, { key: "H30", mm: 3000, label: "높이 3,000" }, { key: "H37", mm: 3700, label: "높이 3,700" }];
-const HYR_LENGTHS = [{ key: "L20", mm: 2000 }, { key: "L27", mm: 2667 }, { key: "L33", mm: 3333 }, { key: "L40", mm: 4000 }, { key: "L47", mm: 4667 }, { key: "L53", mm: 5333 }, { key: "L60", mm: 6000 }];
-const HYR_FREESTANDING = {
-  W13: { mm: 1300, type: "싱글", rows: { L20: [651400, 655800, 819100, 17300], L27: [708000, 712400, 875800, 22700], L33: [819500, 823900, 987300, 28300], L40: [967200, 972900, 1161000, 34000], L47: [1091600, 1097300, 1285400, 39600], L53: [1117100, 1122800, 1310900, 45200], L60: [1144800, 1150500, 1338600, 50900] } },
-  W20: { mm: 2000, type: "싱글", rows: { L20: [692100, 696500, 859800, 45000], L27: [754900, 759300, 922600, 58200], L33: [876500, 880900, 1044300, 71900], L40: [1030900, 1036600, 1224700, 87200], L47: [1161300, 1167000, 1355100, 100900], L53: [1196700, 1202500, 1390600, 114600], L60: [1230700, 1236400, 1424500, 129900] } },
-  W27: { mm: 2700, type: "싱글 (지붕 R)", rows: { L20: [913000, 918800, 1106900, 38800], L27: [1033100, 1038800, 1226900, 52600], L33: [1130300, 1136000, 1324100, 66500], L40: [1334500, 1342800, 1580400, 80300], L47: [1449300, 1457700, 1695300, 94200], L53: [1505000, 1513300, 1750900, 108000], L60: [1562600, 1571000, 1808600, 121900] } },
-  W30: { mm: 3000, type: "싱글 (지붕 R)", rows: { L20: [927300, 933100, 1121200, 42700], L27: [1055200, 1060900, 1249000, 56800], L33: [1160500, 1166300, 1354400, 70600], L40: [1366800, 1375200, 1612800, 84700], L47: [1485600, 1494000, 1731600, 98500], L53: [1549200, 1557500, 1795100, 112600], L60: [1615000, 1623300, 1860900, 126400] } },
-  W26: { mm: 2600, type: "더블", rows: { L20: [971700, 977400, 1165500, 34100], L27: [1076600, 1082300, 1270400, 45400], L33: [1251700, 1257500, 1445600, 56600], L40: [1501100, 1509500, 1747100, 67900], L47: [1724200, 1732500, 1970100, 79200], L53: [1776300, 1784700, 2022300, 90400], L60: [1833900, 1842200, 2079800, 101700] } },
-  W40: { mm: 4000, type: "더블", rows: { L20: [1072300, 1078000, 1266100, 87400], L27: [1189400, 1195100, 1383200, 116400], L33: [1380900, 1386600, 1574700, 143800], L40: [1647600, 1656000, 1893600, 172800], L47: [1883200, 1891600, 2129200, 201800], L53: [1953100, 1961500, 2199100, 229200], L60: [2027000, 2035400, 2273000, 258200] } }
-};
-const HYR_WALL = {
-  W13: { mm: 1300, type: "싱글", rows: { L20: [576600, 579400, 673500, 17300], L27: [619800, 622600, 716700, 22700], L33: [736100, 738900, 833000, 28300], L40: [878600, 882800, 1001600, 34000], L47: [953000, 957200, 1076000, 39600], L53: [978600, 982800, 1101600, 45200] } },
-  W20: { mm: 2000, type: "싱글", rows: { L20: [614300, 617100, 711200, 45000], L27: [663800, 666600, 760700, 58200], L33: [790200, 793000, 887100, 71900], L40: [939200, 943400, 1062200, 87200], L47: [1019600, 1023800, 1142600, 100900], L53: [1055200, 1059300, 1178100, 114600] } },
-  W26: { mm: 2600, type: "더블", rows: { L20: [941400, 946300, 1085600, 34100], L27: [1032900, 1037800, 1177200, 45400], L33: [1212800, 1217600, 1357000, 56600], L40: [1488500, 1496600, 1706000, 67900], L47: [1661800, 1670000, 1879400, 79200], L53: [1713700, 1721900, 1931300, 90400] } },
-  W40: { mm: 4000, type: "더블", rows: { L20: [1052600, 1057500, 1196800, 87400], L27: [1156300, 1161100, 1300500, 116400], L33: [1352500, 1357300, 1496700, 143800], L40: [1645500, 1653700, 1863100, 172800], L47: [1831400, 1839600, 2049000, 201800], L53: [1901100, 1909200, 2118600, 229200] } }
-};
-// 요청 폭·길이·높이보다 크거나 같은 규격 중 가장 싼 조합을 고른다 (큰 부재를 절단해 사용).
-function pickHomeYardRoof(table, reqW, reqL, reqH) {
-  const h = HYR_HEIGHTS.find((item) => item.mm >= reqH) || HYR_HEIGHTS[HYR_HEIGHTS.length - 1];
-  const hi = HYR_HEIGHTS.indexOf(h);
-  const len = HYR_LENGTHS.find((item) => item.mm >= reqL);
-  if (!len) return null;
-  let best = null;
-  Object.entries(table).forEach(([wKey, spec]) => {
-    if (spec.mm < reqW) return;
-    const row = spec.rows[len.key];
-    if (!row) return;
-    const candidate = { wKey, wMm: spec.mm, type: spec.type, lKey: len.key, lMm: len.mm, height: h, jpy: row[hi], heatCut: row[3] };
-    if (!best || candidate.jpy < best.jpy) best = candidate;
-  });
-  return best;
-}
 
 const SWATCH_IMG = OPT_IMG + "colors/";
 const PORCH_FRAME_COLORS = [
@@ -547,25 +510,10 @@ function calculatePorch() {
   let attachDeductionJpy = 0;
   let roofPick = null;
   if (glassFaces.length === 0) {
-    // 유리면 없음 → 홈야드루프Ⅱ 유사 규격 (접속면이 있으면 벽부착형)
-    const wallMode = Boolean(attachedGlassFace);
-    const attachedAxis = wallMode ? attachedGlassFace.axis : "W";
-    const reqL = attachedAxis === "W" ? width.step.actual : depth.step.actual; // 접속면(또는 정면) 길이
-    const reqW = attachedAxis === "W" ? depth.step.actual : width.step.actual; // 그 직각 방향
-    roofPick = pickHomeYardRoof(wallMode ? HYR_WALL : HYR_FREESTANDING, reqW, reqL, height.mm);
-    if (!roofPick) {
-      warnings.push("요청 치수를 덮을 수 있는 홈야드루프Ⅱ 규격이 없습니다 (최대 폭 4,000 × 길이 6,000).");
-      return { valid: false, warnings, lines, width, depth, height };
-    }
-    layoutId = "roof";
-    push({
-      group: "본체",
-      label: `홈야드루프Ⅱ ${wallMode ? "벽부착형" : "독립형"} ${roofPick.type} ${roofPick.wKey}×${roofPick.lKey} ${roofPick.height.label} · 유사 규격 적용`,
-      detail: `유리문이 한 면도 없어 지붕 구조물(홈야드루프Ⅱ) 가격으로 산정 (${wallMode ? "P.1167" : "P.1166"}). 요청 폭 ${formatNumber(reqW)} × 길이 ${formatNumber(reqL)} × 높이 ${formatNumber(height.mm)}mm → 지붕 폭 ${formatNumber(roofPick.wMm)} × 길이 ${formatNumber(roofPick.lMm)} × 기둥 ${formatNumber(roofPick.height.mm)}mm (큰 규격을 절단해 사용). 기둥·프레임·지붕재 포함, 유리문 없음`,
-      krw: jpyToKrw(roofPick.jpy),
-      image: OPT_IMG + (roofPick.type.startsWith("더블") ? "homeyard-roof-double.jpg" : "homeyard-roof.jpg")
-    });
-  } else if (attachedGlassFace) {
+    warnings.push("올글라스포치Ⅱ는 최소 한 면이 유리문이어야 합니다. 유리면이 없는 지붕 구조물은 특별제작품에서 \"홈야드루프Ⅱ\"를 선택해 주세요.");
+    return { valid: false, warnings, lines, width, depth, height };
+  }
+  if (attachedGlassFace) {
     const withAttached = layoutOf(glassFaces.concat(attachedGlassFace));
     if (withAttached) {
       layoutId = withAttached;
