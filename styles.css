@@ -1349,6 +1349,15 @@ img {
   cursor: pointer;
 }
 
+.swatch-picker.is-disabled .swatch-picker__button {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.porch-face-table .swatch-picker__button {
+  padding: 8px 12px;
+}
+
 .swatch-picker__button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
