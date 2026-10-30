@@ -1336,9 +1336,44 @@ previewImage.addEventListener("error", () => {
   previewImagePlaceholder.hidden = false;
 });
 
+// ---- Step 1 견적 유형 (일반 자재 / 특별 주문 제품) 전환
+const BUILDER_MODE_KEY = "inoex-builder-mode-v1";
+
+function setBuilderMode(mode, persist = true) {
+  const standardSection = document.querySelector("#standardSection");
+  const specialSection = document.querySelector("#specialSection");
+  if (!standardSection || !specialSection) return;
+  const next = mode === "special" ? "special" : "standard";
+  standardSection.hidden = next !== "standard";
+  specialSection.hidden = next !== "special";
+  document.querySelectorAll("[data-builder-mode]").forEach((button) => {
+    const active = button.dataset.builderMode === next;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  if (persist) {
+    try {
+      window.localStorage.setItem(BUILDER_MODE_KEY, next);
+    } catch (error) {
+      /* 저장 불가 환경은 무시 */
+    }
+  }
+}
+
+document.querySelectorAll("[data-builder-mode]").forEach((button) => {
+  button.addEventListener("click", () => setBuilderMode(button.dataset.builderMode));
+});
+
 loadQuoteItems();
 buildCategories();
 renderProductOptions();
 renderPriceOptions();
 syncAll();
 switchView("builder");
+let savedBuilderMode = "standard";
+try {
+  savedBuilderMode = window.localStorage.getItem(BUILDER_MODE_KEY) || "standard";
+} catch (error) {
+  savedBuilderMode = "standard";
+}
+setBuilderMode(savedBuilderMode, false);

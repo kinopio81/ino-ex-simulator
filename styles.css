@@ -245,6 +245,73 @@ img {
   font-size: 1.7rem;
 }
 
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 248, 0.8);
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.mode-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(22, 33, 29, 0.08);
+}
+
+.mode-card__eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.mode-card strong {
+  font-size: 18px;
+  color: var(--primary-deep);
+}
+
+.mode-card small {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.mode-card.is-active {
+  background: var(--primary-deep);
+  border-color: var(--primary-deep);
+  box-shadow: 0 16px 40px rgba(18, 56, 44, 0.22);
+}
+
+.mode-card.is-active .mode-card__eyebrow,
+.mode-card.is-active small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.mode-card.is-active strong {
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .mode-switch {
+    grid-template-columns: 1fr;
+  }
+}
+
 .builder-layout {
   display: grid;
   grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.05fr);

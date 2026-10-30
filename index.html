@@ -36,7 +36,7 @@
             <p class="section-label">Step 1</p>
             <h2>자재 선택</h2>
             <p class="hero-card__text">
-              제품을 선택해 장바구니에 담고, 필요하면 시공비까지 함께 계산하세요.
+              먼저 일반 자재인지 특별 주문 제품인지 고른 뒤, 제품을 선택해 장바구니에 담고 필요하면 시공비까지 함께 계산하세요.
               모바일에서는 선택 화면과 견적 화면을 분리해 더 편하게 볼 수 있습니다.
             </p>
           </div>
@@ -52,7 +52,20 @@
           </div>
         </div>
 
-        <div class="builder-layout">
+        <div class="mode-switch" id="builderModeSwitch" role="tablist" aria-label="견적 유형 선택">
+          <button class="mode-card is-active" type="button" role="tab" aria-selected="true" data-builder-mode="standard">
+            <span class="mode-card__eyebrow">일반 자재</span>
+            <strong>표준 제품 견적</strong>
+            <small>카탈로그 규격 제품을 고르고 수량과 시공비를 더해 장바구니에 담습니다.</small>
+          </button>
+          <button class="mode-card" type="button" role="tab" aria-selected="false" data-builder-mode="special">
+            <span class="mode-card__eyebrow">특별 주문 제품</span>
+            <strong>인디오더 제품 구성</strong>
+            <small>올글라스포치Ⅱ · 홈야드루프Ⅱ · 홈야드루프 글라스 시스템을 치수와 옵션으로 구성해 견적합니다.</small>
+          </button>
+        </div>
+
+        <div class="builder-layout" id="standardSection">
           <section class="panel">
             <div class="panel__header">
               <div>
@@ -143,7 +156,7 @@
           </section>
         </div>
 
-        <section class="panel porch-panel">
+        <section class="panel porch-panel" id="specialSection" hidden>
           <div class="panel__header porch-panel__header">
             <div>
               <p class="section-label">Step 1-2 · Special Order</p>
