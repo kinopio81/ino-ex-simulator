@@ -74,6 +74,7 @@ function previewSvg(model) {
 
   const defs = [];
   const lateLabels = [];
+  let body0 = "";
   let patternCount = 0;
   const skewX = "matrix(0.866,0.5,0,1,0,0)";
   const skewY = "matrix(-0.866,0.5,0,1,0,0)";
@@ -94,8 +95,28 @@ function previewSvg(model) {
     return `url(#${id})`;
   };
 
-  const glassFill = model.glassTint === "standard" ? "rgba(178,212,236,0.36)" : "rgba(126,138,150,0.42)";
-  const glassStroke = model.glassTint === "frame" ? frameHex : "#8e9aa4";
+  // 조명(다운라이트·라인라이트·라이팅 페이스)이 하나라도 있으면 저녁 장면으로 그려 빛이 드러나게 한다.
+  const night = (model.downlights || 0) > 0 || !!roof.lineLight || !!roof.lightingFace;
+  const ink = night ? "#f3efe6" : "#3f4542";
+  const inkSoft = night ? "#d8d2c6" : "#5f594f";
+  const glassFill = night
+    ? "rgba(255,214,150,0.22)"
+    : model.glassTint === "standard" ? "rgba(178,212,236,0.36)" : "rgba(126,138,150,0.42)";
+  const glassStroke = model.glassTint === "frame" ? frameHex : night ? "#c9c2b4" : "#8e9aa4";
+  const lateLights = [];
+  const tag = (p, text, accent) => {
+    const w = String(text).length * 10.2 + 16;
+    const x = p[0] - w / 2;
+    const y = p[1] - 10;
+    lateLabels.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="rgba(255,255,255,0.94)" stroke="${accent}" stroke-width="1.2"/><text x="${p[0].toFixed(1)}" y="${(p[1] + 4).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f2a24">${previewEscape(text)}</text>`);
+  };
+  if (night) {
+    const gid = `pv-dusk-${++patternCount}`;
+    defs.push(`<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a3a" stop-opacity="0.82"/><stop offset="1" stop-color="#3c3a3a" stop-opacity="0.72"/></linearGradient>`);
+    defs.push(`<radialGradient id="pv-halo"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.95"/><stop offset="0.35" stop-color="#ffd978" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd978" stop-opacity="0"/></radialGradient>`);
+    defs.push(`<radialGradient id="pv-pool"><stop offset="0" stop-color="#ffe6a6" stop-opacity="0.8"/><stop offset="1" stop-color="#ffe6a6" stop-opacity="0"/></radialGradient>`);
+    body0 = `<rect x="0" y="0" width="${PREVIEW_VIEW_W}" height="${viewH.toFixed(0)}" rx="14" fill="url(#${gid})"/>`;
+  }
 
   // 면 그리기. bl→br 방향이 면의 길이 방향, z 는 높이
   const drawFace = (face, bl, br, dir) => {
@@ -108,7 +129,7 @@ function previewSvg(model) {
     if (face.finish === "building") {
       out += polygon(quad(-0.06, 1.06, 0, H + 1100), `fill="${hatchPattern(transform)}" stroke="#b3ada1" stroke-width="1"`);
       const c = at(0.96, H + 850);
-      lateLabels.push(`<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" text-anchor="start" font-size="10" font-weight="600" fill="#5f594f">건물 벽 · ${previewEscape(face.label)} 접속</text>`);
+      lateLabels.push(`<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" text-anchor="start" font-size="10" font-weight="600" fill="${inkSoft}">건물 벽 · ${previewEscape(face.label)} 접속</text>`);
       return out;
     }
     if (face.finish === "glass") {
@@ -122,7 +143,24 @@ function previewSvg(model) {
       // 유리 광택
       out += polygon(quad(0.08, 0.2, 200, H - 150), `fill="#ffffff" opacity="0.18"`);
     } else if (face.finish === "wall") {
-      out += polygon(quad(0, 1, 0, H), `fill="${imagePattern(face.swatch || `assets/options/colors/frame-${model.frameColorId}.jpg`, transform)}" stroke="${frameHex}" stroke-width="1.2"`);
+      const boardUrl = face.swatch || `assets/options/colors/frame-${model.frameColorId}.jpg`;
+      out += polygon(quad(0, 1, 0, H), `fill="${imagePattern(boardUrl, transform, 64)}" stroke="${frameHex}" stroke-width="2"`);
+      // 측면 음영으로 입체감
+      out += polygon(quad(0, 1, 0, H), `fill="${dir === "y" ? "rgba(0,0,0,0.16)" : "rgba(255,255,255,0.08)"}"`);
+      // 에버아트보드 910mm 폭 세로 줄눈 + 보드 결
+      const faceMm = len; // bl/br 는 mm 좌표
+      const boards = Math.max(2, Math.round(faceMm / 910));
+      for (let i = 1; i < boards; i += 1) out += line(at(i / boards, 60), at(i / boards, H - 60), `stroke="#000" stroke-width="1.1" opacity="0.38"`);
+      for (let i = 0; i < boards; i += 1) {
+        for (let g = 1; g <= 3; g += 1) {
+          const t = (i + g / 4) / boards;
+          out += line(at(t, 120), at(t, H - 120), `stroke="#000" stroke-width="0.5" opacity="0.09"`);
+        }
+      }
+      // 상하 레일
+      out += polygon(quad(0, 1, H - 110, H), `fill="${frameHex}"`);
+      out += polygon(quad(0, 1, 0, 110), `fill="${frameHex}"`);
+      tag(at(0.5, H * 0.74), `벽면세트 · 에버아트보드`, frameHex);
     } else if (face.finish === "slideTextile") {
       out += polygon(quad(0, 1, 0, H), `fill="#e6dcc8" stroke="${frameHex}" stroke-width="1.2"`);
       for (let z = 400; z < H; z += 400) out += line(at(0, z), at(1, z), `stroke="#000" stroke-width="0.6" opacity="0.08"`);
@@ -157,8 +195,34 @@ function previewSvg(model) {
   const wallMount = faces.back && faces.back.finish === "building";
   let body = "";
 
+  // 저녁 배경 (조명 있을 때)
+  body += body0;
   // 바닥 그림자
-  body += polygon([pt(-120, -120, 0), pt(W + 120, -120, 0), pt(W + 120, D + 120, 0), pt(-120, D + 120, 0)], `fill="#16211d" opacity="0.06"`);
+  body += polygon([pt(-120, -120, 0), pt(W + 120, -120, 0), pt(W + 120, D + 120, 0), pt(-120, D + 120, 0)], `fill="#16211d" opacity="${night ? 0.35 : 0.06}"`);
+  // 다운라이트 위치 (지붕 아래 균등 배치)
+  const lightPts = [];
+  if (model.downlights > 0) {
+    const n = model.downlights;
+    const cols = Math.max(1, Math.round(Math.sqrt(n * W / D)));
+    const rows = Math.ceil(n / cols);
+    let k = 0;
+    for (let r = 0; r < rows && k < n; r += 1) {
+      const inRow = Math.min(cols, n - k);
+      for (let c = 0; c < inRow; c += 1, k += 1) lightPts.push([W * (c + 0.5) / inRow, D * (r + 0.5) / rows]);
+    }
+  }
+  if (night) {
+    // 실내 바닥 전체에 따뜻한 빛
+    body += polygon([pt(0, 0, 0), pt(W, 0, 0), pt(W, D, 0), pt(0, D, 0)], `fill="#ffd98a" opacity="0.28"`);
+    const poolR = Math.min(1400, Math.max(700, Math.sqrt(W * D / Math.max(1, lightPts.length)) * 0.6));
+    lightPts.forEach(([x, y]) => {
+      const c = pt(x, y, 0);
+      body += `<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="${(poolR * 1.22 * s).toFixed(1)}" ry="${(poolR * 0.71 * s).toFixed(1)}" fill="url(#pv-pool)"/>`;
+    });
+    if (roof.lineLight) {
+      [0.33, 0.67].forEach((t) => body += line(pt(W * t, 120, 0), pt(W * t, D - 120, 0), `stroke="#ffe6a6" stroke-width="${(520 * s).toFixed(1)}" opacity="0.45" stroke-linecap="round"`));
+    }
+  }
   // 뒷면·우측면 (뒤쪽부터)
   body += drawFace(faces.back, [W, D], [0, D], "x");
   body += drawFace(faces.right, [W, 0], [W, D], "y");
@@ -175,6 +239,12 @@ function previewSvg(model) {
     ? imagePattern(roof.ceilingSwatch, skewTop, 30)
     : roof.tint === "brown_smoke" ? "rgba(104,76,58,0.62)" : "rgba(196,216,230,0.55)";
   body += polygon(roofPts, `fill="${roofFill}" stroke="${frameHex}" stroke-width="1"`);
+  if (roof.ceilingSwatch) {
+    // 에버아트보드 천정 줄눈 (폭 방향 보드)
+    const rowsC = Math.max(2, Math.round(D / 455));
+    for (let i = 1; i < rowsC; i += 1) body += line(pt(40, D * i / rowsC, H), pt(W - 40, D * i / rowsC, H), `stroke="#000" stroke-width="0.7" opacity="0.22"`);
+    if (night) body += polygon(roofPts, `fill="#ffd98a" opacity="0.18"`);
+  }
   if (!roof.ceilingSwatch) body += polygon([pt(W * 0.08, D * 0.1, H), pt(W * 0.35, D * 0.1, H), pt(W * 0.2, D * 0.9, H), pt(W * 0.0, D * 0.9, H)], `fill="#ffffff" opacity="0.25"`);
   if (roof.shade) {
     for (let y = 150; y < D; y += 320) body += line(pt(60, y, H), pt(W - 60, y, H), `stroke="${roof.shade === "canvas" ? "#d9c9ab" : "#e6dcc8"}" stroke-width="${(230 * s).toFixed(1)}" opacity="0.9"`);
@@ -194,27 +264,36 @@ function previewSvg(model) {
   }
   if (roof.double) body += line(pt(W / 2, 0, H), pt(W / 2, D, H), `stroke="${frameHex}" stroke-width="${(150 * s).toFixed(1)}"`);
   if (roof.lineLight) {
-    [0.33, 0.67].forEach((t) => body += line(pt(W * t, 120, H), pt(W * t, D - 120, H), `stroke="#ffe39a" stroke-width="3" opacity="0.95"`));
+    [0.33, 0.67].forEach((t) => {
+      const a = pt(W * t, 120, H);
+      const b = pt(W * t, D - 120, H);
+      lateLights.push(line(a, b, `stroke="#ffd978" stroke-width="9" opacity="0.35" stroke-linecap="round"`));
+      lateLights.push(line(a, b, `stroke="#fff3c4" stroke-width="2.6" opacity="1" stroke-linecap="round"`));
+    });
+    const c = pt(W * 0.33, 120, H);
+    tag([c[0], c[1] + 20], "라인라이트", "#d9a63a");
   }
-  if (model.downlights > 0) {
-    const n = model.downlights;
-    const cols = Math.max(1, Math.round(Math.sqrt(n * W / D)));
-    const rows = Math.ceil(n / cols);
-    let k = 0;
-    for (let r = 0; r < rows && k < n; r += 1) {
-      const inRow = Math.min(cols, n - k);
-      for (let c = 0; c < inRow; c += 1, k += 1) {
-        const p = pt(W * (c + 0.5) / inRow, D * (r + 0.5) / rows, H);
-        body += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="#ffd66b" stroke="#c48f22" stroke-width="0.8"/>`;
-      }
-    }
+  lightPts.forEach(([x, y]) => {
+    const c = pt(x, y, H);
+    lateLights.push(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="13" fill="url(#pv-halo)"/>`);
+    lateLights.push(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="4" fill="#fff6d2" stroke="#d9a63a" stroke-width="1"/>`);
+    // 빛 기둥 (지붕 → 바닥)
+    const f = pt(x, y, 0);
+    lateLights.push(`<polygon points="${fmtPt([c[0] - 2, c[1]])} ${fmtPt([c[0] + 2, c[1]])} ${fmtPt([f[0] + 1000 * s, f[1]])} ${fmtPt([f[0] - 1000 * s, f[1]])}" fill="#ffe6a6" opacity="0.1"/>`);
+  });
+  if (lightPts.length) {
+    const c = pt(lightPts[0][0], lightPts[0][1], H);
+    tag([c[0] - 26, c[1] - 22], `다운라이트 ${model.downlights}개`, "#d9a63a");
   }
   // 도리 (지붕 테두리)
   const girder = Math.max(4, 160 * s);
   body += line(pt(0, D, H), pt(W, D, H), `stroke="${frameHex}" stroke-width="${(girder * 0.7).toFixed(1)}"`);
   body += line(pt(W, 0, H), pt(W, D, H), `stroke="${frameHex}" stroke-width="${(girder * 0.7).toFixed(1)}"`);
   if (roof.lightingFace) {
-    body += polygon(roofPts, `fill="none" stroke="#ffd98a" stroke-width="${(girder * 1.4).toFixed(1)}" opacity="0.55"`);
+    lateLights.push(polygon(roofPts, `fill="none" stroke="#ffd978" stroke-width="${(girder * 3.2).toFixed(1)}" opacity="0.3" stroke-linejoin="round"`));
+    lateLights.push(polygon(roofPts, `fill="none" stroke="#fff3c4" stroke-width="${(girder * 0.9).toFixed(1)}" opacity="0.95" stroke-linejoin="round"`));
+    const c = pt(W, D / 2, H);
+    tag([c[0] + 40, c[1] - 30], "라이팅 페이스", "#d9a63a");
   }
   body += line(pt(0, 0, H), pt(W, 0, H), `stroke="${frameHex}" stroke-width="${girder.toFixed(1)}"`);
   body += line(pt(0, 0, H), pt(0, D, H), `stroke="${frameHex}" stroke-width="${girder.toFixed(1)}"`);
@@ -223,15 +302,16 @@ function previewSvg(model) {
   body += drawFace(faces.front, [0, 0], [W, 0], "x");
   body += post(0, 0);
   body += post(W, 0);
+  body += lateLights.join("");
   body += lateLabels.join("");
   if (roof.r) {
     const c = pt(W / 2, D / 2, H + 260);
-    body += `<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" text-anchor="middle" font-size="10" fill="#4b4f4c">지붕 R 사양</text>`;
+    body += `<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" text-anchor="middle" font-size="10" fill="${ink}">지붕 R 사양</text>`;
   }
 
   // 치수 표기
-  const label = (p, text, anchor, dx, dy) => `<text x="${(p[0] + dx).toFixed(1)}" y="${(p[1] + dy).toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="#3f4542">${previewEscape(text)}</text>`;
-  const dim = (a, b) => line(a, b, `stroke="#8a8f8c" stroke-width="0.8" stroke-dasharray="3 2"`);
+  const label = (p, text, anchor, dx, dy) => `<text x="${(p[0] + dx).toFixed(1)}" y="${(p[1] + dy).toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="${ink}">${previewEscape(text)}</text>`;
+  const dim = (a, b) => line(a, b, `stroke="${night ? "#b9b3a6" : "#8a8f8c"}" stroke-width="0.8" stroke-dasharray="3 2"`);
   const fm = pt(W / 2, 0, 0);
   const lm = pt(0, D / 2, 0);
   body += dim(pt(0, 0, -160), pt(W, 0, -160)) + label([fm[0], fm[1] + 160 * s], `${faces.front.label} ${previewNumber(W)}`, "middle", 10, 14);
