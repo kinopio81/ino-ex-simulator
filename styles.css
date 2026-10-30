@@ -1782,6 +1782,37 @@ img {
   font-weight: 700;
 }
 
+.porch-breakdown__amount {
+  display: block;
+}
+
+.porch-breakdown__remove {
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(176, 54, 44, 0.35);
+  background: rgba(176, 54, 44, 0.06);
+  color: var(--danger);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.porch-breakdown__remove:hover,
+.porch-breakdown__remove:focus-visible {
+  background: var(--danger);
+  color: #fff;
+  outline: none;
+}
+
+.porch-breakdown tr.is-included .porch-breakdown__remove {
+  color: var(--danger);
+}
+
 .porch-breakdown td.is-separate {
   color: var(--accent-deep);
   font-weight: 700;

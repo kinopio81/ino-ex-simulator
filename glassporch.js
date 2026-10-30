@@ -463,11 +463,63 @@ function syncAttachedFaceControls() {
 function readCustomOptions() {
   return Array.from(porchCustomOptions.querySelectorAll("[data-porch-option]"))
     .map((row) => ({
+      row,
       label: row.querySelector("[data-porch-option-label]").value.trim(),
       krw: porchReadNumber(row.querySelector("[data-porch-option-krw]"), 0)
     }))
     .filter((option) => option.label && option.krw > 0);
 }
+
+/*
+  구성 항목 표의 "빼기" 버튼. 각 항목(line)은 자기를 만든 폼 컨트롤을 되돌리는 remove() 를 가질 수 있고,
+  버튼을 누르면 그 컨트롤 값을 바꾼 뒤 input/change 이벤트를 흘려 폼이 평소처럼 다시 계산되게 한다.
+*/
+function porchResetControl(control, value) {
+  if (!control) return;
+  if (control.type === "checkbox") control.checked = !!value;
+  else control.value = value;
+  control.dispatchEvent(new Event("input", { bubbles: true }));
+  control.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function porchClearCustomOption(row) {
+  if (!row) return;
+  row.querySelector("[data-porch-option-label]").value = "";
+  porchResetControl(row.querySelector("[data-porch-option-krw]"), "");
+}
+
+function porchBreakdownRows(lines) {
+  return lines.map((line, index) => `
+    <tr class="${line.included || line.separate ? "is-included" : ""}">
+      <td>
+        <div class="porch-breakdown__row">
+          ${line.image ? `<img class="porch-breakdown__thumb" src="${line.image}" alt="">` : ""}
+          <div>
+            <span class="porch-breakdown__group">${escapeHtml(line.group)}</span>
+            <strong>${escapeHtml(line.label)}</strong>
+            <small>${escapeHtml(line.detail || "")}</small>
+          </div>
+        </div>
+      </td>
+      <td class="${line.krw < 0 ? "is-negative" : ""}${line.separate ? " is-separate" : ""}">
+        <span class="porch-breakdown__amount">${line.separate ? "별도 필요" : line.included ? "포함" : formatCurrency(line.krw)}</span>
+        ${typeof line.remove === "function" ? `<button type="button" class="porch-breakdown__remove" data-remove-line="${index}" title="이 옵션을 구성에서 뺍니다" aria-label="${escapeHtml(line.label)} 빼기">✕ 빼기</button>` : ""}
+      </td>
+    </tr>
+  `).join("");
+}
+
+function bindBreakdownRemove(table, getLines) {
+  table.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-line]");
+    if (!button) return;
+    const line = getLines()[Number(button.dataset.removeLine)];
+    if (line && typeof line.remove === "function") line.remove();
+  });
+}
+
+let porchLastLines = [];
+bindBreakdownRemove(porchBreakdown, () => porchLastLines);
 
 function calculatePorch() {
   const width = porchPickStep("width", porchReadNumber(porchWidthInput, 3000));
@@ -579,7 +631,8 @@ function calculatePorch() {
         group: "유리문",
         label: `${glassType.id === "grey" ? "그레이색 가산" : "프레임타입 가산"} · ${set.label}`,
         detail: glassType.id === "grey" ? "유리문 그레이색 가산액표 (P.1131)" : "프레임타입 가산액표 (P.1132), 유리문은 그레이색",
-        krw: jpyToKrw(table[set.kind][set.count][heightKey])
+        krw: jpyToKrw(table[set.kind][set.count][heightKey]),
+        remove: () => porchResetControl(porchGlassTypeSelect, "standard")
       });
     });
   }
@@ -589,7 +642,8 @@ function calculatePorch() {
         group: "유리문",
         label: `외부키 사양 변경 · ${set.face.label}`,
         detail: "내부키 → 외부키, 1면당 가산 (P.1137)",
-        krw: jpyToKrw(PORCH_OUTER_KEY[set.kind])
+        krw: jpyToKrw(PORCH_OUTER_KEY[set.kind]),
+        remove: () => porchResetControl(porchOuterKeyToggle, false)
       });
     });
   }
@@ -601,6 +655,7 @@ function calculatePorch() {
       label: "지붕재 브라운 스모크 폴리카 (열선컷 타입) 가산",
       detail: roofPick ? `홈야드루프Ⅱ ${roofPick.wKey}×${roofPick.lKey} 열선컷 가산액 (${attachedGlassFace ? "P.1167" : "P.1166"})` : "열선컷 지붕재 가산액 (P.1130~1131)",
       krw: jpyToKrw(roofPick ? roofPick.heatCut : (layoutId === "basic3" ? priceTable.heatCut.basic3 : priceTable.heatCut.other)),
+      remove: () => porchResetControl(porchRoofSelect, "clear_matte"),
       image: roof.swatch
     });
   } else {
@@ -617,6 +672,7 @@ function calculatePorch() {
         label: `벽면세트 · ${faceLabel}`,
         detail: "해당 면 유리문 대신 설치 (세트 가격에서 이 면 유리문 제외됨) · 에버아트보드 표리 양면 + 견절재·알루미늄 프레임 포함, 전 부재 절단·타공 가공품 (P.1137)",
         krw: jpyToKrw(PORCH_WALL_SET[face.axis][axisKey][heightKey]),
+        remove: () => porchResetControl(porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`), "glass"),
         image: OPT_IMG + "wall-set.jpg"
       });
     } else if (face.finish === "slideTextile" || face.finish === "slideBoard") {
@@ -630,6 +686,7 @@ function calculatePorch() {
           label: `슬라이드스크린 ${kind === "textile" ? "텍스타일" : "아트보드"} · ${faceLabel}`,
           detail: "해당 면 유리문 대신 설치 (세트 가격에서 이 면 유리문 제외됨) · 완전 가림 미닫이, 외부키 타입 (P.1141)",
           krw: jpyToKrw(table[heightKey]),
+          remove: () => porchResetControl(porchFaceTable.querySelector(`[data-face="${face.id}"] [data-face-finish]`), "glass"),
           image: OPT_IMG + (kind === "textile" ? "slide-screen-textile.jpg" : "slide-screen-board.jpg")
         });
       }
@@ -645,6 +702,7 @@ function calculatePorch() {
       label: `플랩스크린 ${face.flap === "grid" ? "알루미늄 격자" : "아트보드"} · ${face.label} (${faceSizeLabel(face)})`,
       detail: `${finish ? finish.label : ""} 면 앞 전용 기둥·도리에 설치, 2장 1조 폴딩도어 (P.1139)`,
       krw: jpyToKrw(PORCH_FLAP_SCREEN[face.flap][face.axis][axisKey][heightKey]),
+      remove: () => porchResetControl(porchFlapTable.querySelector(`[data-flap-face="${face.id}"]`), "none"),
       image: OPT_IMG + "flap-screen.jpg"
     });
   });
@@ -673,6 +731,7 @@ function calculatePorch() {
         ? `에버아트보드 유닛 천정 + LED 라인라이트 ${entry.lineW} (전구색) · 트랜스·코드 별도 (P.1142)`
         : "에버아트보드 유닛 천정, 견절재 없는 구조 (P.1142)",
       krw: jpyToKrw(lineLight ? entry.line : entry.base),
+      remove: () => porchResetControl(porchCeilingTypeSelect, "none"),
       image: OPT_IMG + (lineLight ? "ceiling-linelight.jpg" : "ceiling.jpg")
     });
     push({
@@ -694,6 +753,7 @@ function calculatePorch() {
       krw: jpyToKrw(boardPlan.jpy),
       included: ceilingGrade.id === "basic",
       verify: ceilingGrade.id !== "basic",
+      remove: ceilingGrade.id === "basic" ? null : () => porchResetControl(porchCeilingBoardGradeSelect, "basic"),
       image: OPT_IMG + "everart-board.jpg"
     });
   }
@@ -713,6 +773,7 @@ function calculatePorch() {
       label: `${downlight.label} × ${qty}개`,
       detail: `내천정 추천 다운라이트 (P.1143) · 수량 산정: ${modeNote} · 트랜스·배선 별도`,
       krw: jpyToKrw(downlight.jpy * qty),
+      remove: () => porchResetControl(porchDownlightSelect, "none"),
       image: downlight.image
     });
   }
@@ -744,13 +805,15 @@ function calculatePorch() {
         label: `비엔타 커튼 ${curtainColor} · ${face.label} 생지 ${pieces}장 (폴 길이 약 ${formatNumber(Math.round(pieceWidth))}mm)`,
         detail: `높이 ${formatNumber(curtainHeight)}mm (${band.label}) × 폭 ${pieceWidth <= 1000 ? "250~1000" : "1010~2000"} 구간 단가 (P.1352)`,
         krw: jpyToKrw(fabric * pieces),
+        remove: () => porchResetControl(porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`), false),
         image: curtainSwatch
       });
       push({
         group: "커튼",
         label: `커튼 취부키트 (레일 폴 2m·브라켓) · ${face.label} × ${pieces}세트`,
         detail: "JDA-P11S, 생지 1장당 키트 1세트 (P.1352)",
-        krw: jpyToKrw(PORCH_CURTAIN.kit * pieces)
+        krw: jpyToKrw(PORCH_CURTAIN.kit * pieces),
+        remove: () => porchResetControl(porchCurtainFaces.querySelector(`[data-curtain-face="${face.id}"]`), false)
       });
     });
   }
@@ -771,13 +834,15 @@ function calculatePorch() {
         label: `방충망 본체세트 · ${face.label} (${faceSizeLabel(face)}, ${height.label}) · 프레임 ${screenColor}`,
         detail: "플리츠 방충망 (P.1144)",
         krw: jpyToKrw(PORCH_SCREEN_DOOR.body[heightKey][code]),
+        remove: () => porchResetControl(porchScreenFaces.querySelector(`[data-screen-face="${face.id}"]`), false),
         image: screenColorItem.swatch
       });
       push({
         group: "방충망",
         label: `방충망 고정부재세트 · ${face.label} (${faceSizeLabel(face)})`,
         detail: "스텐컬러 (P.1144)",
-        krw: jpyToKrw(PORCH_SCREEN_DOOR.fix[code])
+        krw: jpyToKrw(PORCH_SCREEN_DOOR.fix[code]),
+        remove: () => porchResetControl(porchScreenFaces.querySelector(`[data-screen-face="${face.id}"]`), false)
       });
     });
     const axes = new Set(screenGlassFaces.map((face) => face.axis));
@@ -807,7 +872,8 @@ function calculatePorch() {
         : attachDeductionJpy
           ? `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 본체는 이 면을 포함한 기준으로 잡고 평균 1면 금액을 감액했습니다. 기둥 감액은 미반영 (P.1150).`
           : `이 면은 건물 외벽에 붙어 유리문·스크린·커튼·방충망을 넣지 않습니다. 세트 가격표 조합 제약으로 감액을 적용하지 못했습니다. 기둥 감액은 미반영 (P.1150).`,
-      included: true
+      included: true,
+      remove: () => porchResetControl(porchAttachFaceSelect, "none")
     });
   }
   push({
@@ -824,6 +890,7 @@ function calculatePorch() {
       label: `틈새조정재 ${height.label}용 (좌우 1세트)${attachedFace ? ` · ${attachedFace.label} 접속부` : ""}`,
       detail: "접속면 양끝 기둥과 건물 외벽 사이 98~128mm 틈새 막음, 본체색 동일 (P.1145)",
       krw: jpyToKrw(PORCH_GAP_ADJUSTER[heightKey]),
+      remove: () => porchResetControl(porchGapToggle, false),
       image: OPT_IMG + "gap-adjuster.jpg"
     });
   }
@@ -834,6 +901,7 @@ function calculatePorch() {
       label: `${spacer.label} (${attachLabel} 기준 자동 선택)`,
       detail: "접속면 지붕과 외벽 사이 70~100mm 틈새 커버, 현장 절단 (P.1145)",
       krw: jpyToKrw(spacer.jpy),
+      remove: () => porchResetControl(porchSpacerToggle, false),
       image: OPT_IMG + "wall-spacer.jpg"
     });
   }
@@ -848,12 +916,13 @@ function calculatePorch() {
       label: `${boardGrade.label} ${boardSize.label} × ${boardQty}장`,
       detail: boardGrade.id === "basic" ? "정번 컬러 기준 장당 단가, 별주 컬러는 별도 (P.303~304)" : "시크 시리즈 장당 단가 (P.331)",
       krw: jpyToKrw(boardGrade.sizes[boardSize.id] * boardQty),
+      remove: () => porchResetControl(porchBoardQtyInput, "0"),
       image: OPT_IMG + "everart-board.jpg"
     });
   }
 
   customOptions.forEach((option) => {
-    push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw });
+    push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw, remove: () => porchClearCustomOption(option.row) });
   });
 
   const materialKrw = lines.reduce((sum, line) => sum + (line.separate ? 0 : line.krw), 0);
@@ -1020,6 +1089,7 @@ function renderPorch() {
 
   if (!result.valid) {
     porchSpecSummary.textContent = "구성 불가";
+    porchLastLines = [];
     porchBreakdown.innerHTML = `<tr><td colspan="2" class="porch-breakdown__empty">경고 내용을 확인하고 구성을 조정해 주세요.</td></tr>`;
     porchTotalKrw.textContent = formatCurrency(0);
     porchInstallKrw.textContent = formatCurrency(0);
@@ -1030,21 +1100,8 @@ function renderPorch() {
 
   porchSpecSummary.textContent = `정면 ${describeSize(result.width)} × 깊이 ${describeSize(result.depth)} × ${result.height.label} · ${PORCH_LAYOUT_LABELS[result.layoutId]}`;
 
-  porchBreakdown.innerHTML = result.lines.map((line) => `
-    <tr class="${line.included || line.separate ? "is-included" : ""}">
-      <td>
-        <div class="porch-breakdown__row">
-          ${line.image ? `<img class="porch-breakdown__thumb" src="${line.image}" alt="">` : ""}
-          <div>
-            <span class="porch-breakdown__group">${escapeHtml(line.group)}</span>
-            <strong>${escapeHtml(line.label)}</strong>
-            <small>${escapeHtml(line.detail || "")}</small>
-          </div>
-        </div>
-      </td>
-      <td class="${line.krw < 0 ? "is-negative" : ""}${line.separate ? " is-separate" : ""}">${line.separate ? "별도 필요" : line.included ? "포함" : formatCurrency(line.krw)}</td>
-    </tr>
-  `).join("");
+  porchLastLines = result.lines;
+  porchBreakdown.innerHTML = porchBreakdownRows(result.lines);
 
   porchTotalKrw.textContent = formatCurrency(result.materialKrw);
   porchInstallKrw.textContent = formatCurrency(result.installFee);

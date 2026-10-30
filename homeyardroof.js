@@ -205,9 +205,13 @@ function createHyrConfigurator(cfg) {
     return best;
   }
 
+  let hyrLastLines = [];
+  bindBreakdownRemove(hyrBreakdown, () => hyrLastLines);
+
   function hyrReadCustomOptions() {
     return Array.from(hyrCustomOptions.querySelectorAll("[data-porch-option]"))
       .map((row) => ({
+        row,
         label: row.querySelector("[data-porch-option-label]").value.trim(),
         krw: porchReadNumber(row.querySelector("[data-porch-option-krw]"), 0)
       }))
@@ -244,7 +248,7 @@ function createHyrConfigurator(cfg) {
     });
 
     if (roof.id === "brown_smoke") {
-      push({ group: "지붕", label: "지붕재 브라운 스모크 폴리카 (열선컷 타입) 가산", detail: `${spec.label} × ${lKey} 열선컷 가산액`, krw: jpyToKrw(pick.heatCut), image: roof.swatch });
+      push({ group: "지붕", label: "지붕재 브라운 스모크 폴리카 (열선컷 타입) 가산", detail: `${spec.label} × ${lKey} 열선컷 가산액`, krw: jpyToKrw(pick.heatCut), remove: () => porchResetControl(hyrRoofSelect, "clear_matte"), image: roof.swatch });
     } else {
       push({ group: "지붕", label: "지붕재 클리어 매트 폴리카", detail: "본체 가격에 포함", included: true, image: roof.swatch });
     }
@@ -276,6 +280,7 @@ function createHyrConfigurator(cfg) {
           label: `글라스 시스템 · ${face.label} (${face.axis === "W" ? "폭" : "길이"} ${formatNumber(faceMm)}mm)`,
           detail: `국내 유리 적용 · 1m당 ${formatCurrency(HYG_GLASS_PER_METER)} × ${meters.toFixed(2)}m · 높이 ${formatNumber(reqH)}mm (높이별 단가 차이 없음)`,
           krw: Math.round(meters * HYG_GLASS_PER_METER / 100) * 100,
+          remove: () => porchResetControl(hyrGlassFaces.querySelector(`[data-glass-face="${face.id}"]`), false),
           image: HYR_IMG + "porch-glass.jpg"
         });
       });
@@ -299,6 +304,7 @@ function createHyrConfigurator(cfg) {
         label: `내천정 ${ceilingType === "vent" ? "통기구 타입" : "표준"} · ${grade.label}${useLine ? ` · 라인라이트 사양 ${entry[2]}` : ""}`,
         detail: `${spec.label} × ${lKey} 기준${spec.kind === "double" ? " (더블 양측 설치 가격)" : ""} · 트랜스·코드 별도 (${ceilingType === "vent" ? "P.1170" : "P.1169"})`,
         krw: jpyToKrw(useLine ? entry[1] : entry[0]),
+        remove: () => porchResetControl(hyrCeilingTypeSelect, "none"),
         image: HYR_IMG + (useLine ? "ceiling-linelight.jpg" : "ceiling.jpg")
       });
       push({ group: "내천정", label: `내천정 보드 색상 · ${ceilingColor.label}`, detail: "정번 컬러 11색 (P.1169), 그 외 별주 대응", included: true, image: ceilingColor.swatch });
@@ -317,6 +323,7 @@ function createHyrConfigurator(cfg) {
         label: `${downlight.label} × ${qty}개`,
         detail: `내천정 추천 다운라이트 (P.1171) · 수량 산정: ${modeNote} · 트랜스·배선 별도`,
         krw: jpyToKrw(downlight.jpy * qty),
+        remove: () => porchResetControl(hyrDownlightSelect, "none"),
         image: downlight.image
       });
     }
@@ -332,6 +339,7 @@ function createHyrConfigurator(cfg) {
           label: `라이팅 페이스 (도리 4변 발광 라인, 전구색) · ${spec.label} × ${lKey}`,
           detail: "24V 저전압, 본체 가산액. 트랜스 별도 (P.1205)",
           krw: jpyToKrw(table[lKey]),
+          remove: () => porchResetControl(hyrLightingFaceToggle, false),
           image: HYR_IMG + "hyr-lighting-face.jpg"
         });
       }
@@ -350,7 +358,8 @@ function createHyrConfigurator(cfg) {
         group: "기둥",
         label: `이동주 100각 ${height.label} × ${movingTotal}본${movingGutter ? ` (세로 홈통 기둥 ${movingGutter}본 포함)` : ""}`,
         detail: `통상 기둥을 이동주로 변경, 1본당 가산 · 홈통 없음 ${formatCurrency(jpyToKrw(rates[0]))} / 홈통 있음 ${formatCurrency(jpyToKrw(rates[1]))} (P.1167)`,
-        krw: jpyToKrw(rates[0] * plain + rates[1] * movingGutter)
+        krw: jpyToKrw(rates[0] * plain + rates[1] * movingGutter),
+        remove: () => { hyrMovingPostGutterInput.value = "0"; porchResetControl(hyrMovingPostInput, "0"); }
       });
     }
 
@@ -372,6 +381,7 @@ function createHyrConfigurator(cfg) {
           label: `로프식 개폐 셰이드 ${shade.label}${colorText} · ${baseW} × ${lKey}${sets > 1 ? ` × ${sets}세트 (더블)` : ""}`,
           detail: "자외선 약 90% 차단, 로프 개폐, 본체 설치 후 추가 가능 (P.1202)",
           krw: jpyToKrw(shadeTable[baseW][lKey] * sets),
+          remove: () => porchResetControl(hyrShadeSelect, "none"),
           image: HYR_IMG + "hyr-rope-shade.jpg"
         });
       }
@@ -386,6 +396,7 @@ function createHyrConfigurator(cfg) {
         label: `천면용 디자인 패널 W950×L1898 ${panel.label} × ${panelQty}장`,
         detail: "유칼리 / 크로스 디자인, 장변 방향 도리 2본 필요 (P.1201)",
         krw: jpyToKrw(panel.jpy * panelQty),
+        remove: () => porchResetControl(hyrPanelQtyInput, "0"),
         image: HYR_IMG + "hyr-design-panel.jpg"
       });
     }
@@ -399,11 +410,12 @@ function createHyrConfigurator(cfg) {
         label: `${spacer.label} (벽부착 길이 ${formatNumber(lMm)}mm 기준 자동 선택)`,
         detail: "지붕과 외벽 사이 70~100mm 틈새 커버, 현장 절단 (P.1145)",
         krw: jpyToKrw(spacer.jpy),
+        remove: () => porchResetControl(hyrSpacerToggle, false),
         image: HYR_IMG + "wall-spacer.jpg"
       });
     }
 
-    hyrReadCustomOptions().forEach((option) => push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw }));
+    hyrReadCustomOptions().forEach((option) => push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw, remove: () => porchClearCustomOption(option.row) }));
 
     const materialKrw = lines.reduce((sum, line) => sum + (line.separate ? 0 : line.krw), 0);
     return { valid: true, warnings, lines, pick, specLabel, glassFaces, mount, roof, color, reqW, reqL, reqH, materialKrw, installFee, total: materialKrw + installFee };
@@ -539,6 +551,7 @@ function createHyrConfigurator(cfg) {
     hyrWarning.hidden = !result.warnings.length;
     if (!result.valid) {
       hyrSpecSummary.textContent = "구성 불가";
+      hyrLastLines = [];
       hyrBreakdown.innerHTML = `<tr><td colspan="2" class="porch-breakdown__empty">경고 내용을 확인하고 치수를 조정해 주세요.</td></tr>`;
       hyrTotalKrw.textContent = formatCurrency(0);
       hyrInstallKrw.textContent = formatCurrency(0);
@@ -547,21 +560,8 @@ function createHyrConfigurator(cfg) {
       return;
     }
     hyrSpecSummary.textContent = `폭 ${formatNumber(result.reqW)} × 길이 ${formatNumber(result.reqL)} × 높이 ${formatNumber(result.reqH)}mm → ${result.specLabel}${result.glassFaces.length ? ` · 유리 ${result.glassFaces.map((face) => face.label).join('·')}` : ""}`;
-    hyrBreakdown.innerHTML = result.lines.map((line) => `
-      <tr class="${line.included || line.separate ? "is-included" : ""}">
-        <td>
-          <div class="porch-breakdown__row">
-            ${line.image ? `<img class="porch-breakdown__thumb" src="${line.image}" alt="">` : ""}
-            <div>
-              <span class="porch-breakdown__group">${escapeHtml(line.group)}</span>
-              <strong>${escapeHtml(line.label)}</strong>
-              <small>${escapeHtml(line.detail || "")}</small>
-            </div>
-          </div>
-        </td>
-        <td class="${line.separate ? "is-separate" : ""}">${line.separate ? "별도 필요" : line.included ? "포함" : formatCurrency(line.krw)}</td>
-      </tr>
-    `).join("");
+    hyrLastLines = result.lines;
+    hyrBreakdown.innerHTML = porchBreakdownRows(result.lines);
     hyrTotalKrw.textContent = formatCurrency(result.materialKrw);
     hyrInstallKrw.textContent = formatCurrency(result.installFee);
     hyrGrandTotal.textContent = formatCurrency(result.total);
