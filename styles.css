@@ -1596,10 +1596,9 @@ img {
 .porch-preview__photo img {
   display: block;
   width: 100%;
-  flex: 1;
-  min-height: 150px;
-  max-height: 220px;
-  object-fit: cover;
+  height: 230px;
+  object-fit: contain;
+  background: #f3efe8;
 }
 
 .porch-preview__photo figcaption {
