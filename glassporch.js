@@ -932,11 +932,88 @@ function syncDownlightDefault() {
   }
 }
 
+function buildPorchPreviewModel(result) {
+  const ceilingType = porchCeilingTypeSelect.value;
+  const hasCeiling = ceilingType === "std" || ceilingType === "vent";
+  const ceilingColor = PORCH_CEILING_COLORS.find((item) => item.id === porchCeilingColorSelect.value) || PORCH_CEILING_COLORS[0];
+  const lineLight = hasCeiling && porchCeilingLineToggle.checked;
+  const downlightOn = porchDownlightSelect.value !== "none";
+  const downlights = downlightOn ? Math.max(1, Math.round(porchReadNumber(porchDownlightQtyInput, PORCH_DOWNLIGHT_DEFAULT[result.width.step.key]))) : 0;
+  const curtainColor = PORCH_CURTAIN.colors.find((item) => item.id === porchCurtainColorSelect.value) || PORCH_CURTAIN.colors[0];
+  const screenColor = PORCH_SCREEN_DOOR.frameColors.find((item) => item.id === porchScreenColorSelect.value) || PORCH_SCREEN_DOOR.frameColors[0];
+  const faces = {};
+  result.faces.forEach((face) => {
+    faces[face.id] = {
+      label: face.label,
+      finish: face.attached ? "building" : face.finish,
+      panels: face.axis === "W" ? 6 : 4,
+      flap: face.flap,
+      curtain: face.curtain ? curtainColor.id : null,
+      screen: face.screen ? screenColor.id : null,
+      swatch: result.frameColor.swatch
+    };
+  });
+  const count = (fn) => result.faces.filter(fn).length;
+  const glassCount = count((face) => face.finish === "glass");
+  const wallCount = count((face) => face.finish === "wall");
+  const slideCount = count((face) => face.finish === "slideTextile" || face.finish === "slideBoard");
+  const flapCount = count((face) => face.flap !== "none");
+  const curtainCount = count((face) => face.curtain);
+  const screenCount = count((face) => face.screen);
+  const attached = result.faces.find((face) => face.attached) || null;
+  const frontOpen = !attached && faces.front.finish === "open";
+  let photo;
+  let photoCaption;
+  if (attached) {
+    photo = glassCount >= 2 ? "agp-attached-2face" : "agp-attached-1face";
+    photoCaption = `참고 사진 · 건물 접속 설치 (카탈로그 P.${glassCount >= 2 ? "1129" : "1126"})`;
+  } else if (result.layoutId === "all4") {
+    photo = "agp-all4-night";
+    photoCaption = "참고 사진 · 4면 유리문, 내천정 조명 (카탈로그 P.1129)";
+  } else if (frontOpen && wallCount) {
+    photo = "agp-wall-openfront";
+    photoCaption = "참고 사진 · 정면 개방 + 벽면세트 (카탈로그 P.1126)";
+  } else if (frontOpen) {
+    photo = "agp-openfront";
+    photoCaption = "참고 사진 · 정면 개방, 내천정 (카탈로그 P.1128)";
+  } else {
+    photo = "agp-wall-3glass";
+    photoCaption = `참고 사진 · 유리문 3면${wallCount ? " + 벽면세트" : ""} (카탈로그 P.1127)`;
+  }
+  const legend = [
+    `유리문 ${glassCount}면 · ${result.glassType.label.split(" (")[0]}`,
+    wallCount ? `벽면세트 ${wallCount}면` : "",
+    slideCount ? `슬라이드스크린 ${slideCount}면` : "",
+    flapCount ? `플랩스크린 ${flapCount}면` : "",
+    attached ? `건물 접속 · ${attached.label}` : "",
+    hasCeiling ? `내천정 · ${ceilingColor.label}` : "",
+    lineLight ? "라인라이트" : "",
+    downlights ? `다운라이트 ${downlights}개` : "",
+    curtainCount ? `커튼 ${curtainCount}면 · ${curtainColor.label}` : "",
+    screenCount ? `방충망 ${screenCount}면` : "",
+    result.roof.id === "brown_smoke" ? "지붕 브라운 스모크" : ""
+  ];
+  return {
+    widthMm: result.width.step.actual,
+    depthMm: result.depth.step.actual,
+    heightMm: result.height.mm,
+    frameColorId: result.frameColor.id,
+    glassTint: result.glassType.id,
+    roof: { tint: result.roof.id, ceilingSwatch: hasCeiling ? ceilingColor.swatch : null, lineLight },
+    faces,
+    downlights,
+    photo: PREVIEW_IMG + photo + ".jpg",
+    photoCaption,
+    legend
+  };
+}
+
 function renderPorch() {
   syncAttachedFaceControls();
   syncDownlightDefault();
   renderMedia();
   const result = calculatePorch();
+  renderStructurePreview($("#porchPreview"), result.valid ? buildPorchPreviewModel(result) : null);
 
   porchWarning.innerHTML = result.warnings.map((text) => `<p>${escapeHtml(text)}</p>`).join("");
   porchWarning.hidden = !result.warnings.length;

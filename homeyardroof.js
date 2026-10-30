@@ -139,6 +139,7 @@ function createHyrConfigurator(cfg) {
   const el = (name) => $(`#${cfg.prefix}${name}`);
   const hyrGlassFaces = el("GlassFaces");
   const hyrGlassMedia = el("GlassMedia");
+  const hyrPreview = el("Preview");
   const hyrForm = el("Form");
   const hyrWidthInput = el("Width");
   const hyrLengthInput = el("Length");
@@ -453,10 +454,87 @@ function createHyrConfigurator(cfg) {
     }
   }
 
+  function buildHyrPreviewModel(result) {
+    const { spec } = result.pick;
+    const wallMount = result.mount === "wall";
+    const ceilingType = hyrCeilingTypeSelect.value;
+    const hasCeiling = ceilingType !== "none";
+    const ceilingColor = PORCH_CEILING_COLORS.find((item) => item.id === hyrCeilingColorSelect.value) || PORCH_CEILING_COLORS[0];
+    const grade = HYR_CEILING_GRADES.find((item) => item.id === hyrCeilingGradeSelect.value) || HYR_CEILING_GRADES[0];
+    const lineLight = hasCeiling && hyrCeilingLineToggle.checked;
+    const downlights = hyrDownlightSelect.value !== "none" ? Math.max(1, Math.round(porchReadNumber(hyrDownlightQtyInput, 4))) : 0;
+    const shade = hyrShadeSelect.value !== "none" && (spec.kind === "single" || spec.kind === "double") ? hyrShadeSelect.value : null;
+    const panels = Math.max(0, Math.round(porchReadNumber(hyrPanelQtyInput, 0)));
+    const movingPosts = Math.max(0, Math.round(porchReadNumber(hyrMovingPostInput, 0)));
+    const lightingFace = hyrLightingFaceToggle.checked && !!HYR_LIGHTING_FACE[result.pick.wKey];
+    const glassIds = result.glassFaces.map((face) => face.id);
+    const faces = {};
+    PORCH_FACES.forEach((face) => {
+      faces[face.id] = {
+        label: face.label,
+        finish: wallMount && face.id === "back" ? "building" : glassIds.includes(face.id) ? "glass" : "open",
+        panels: Math.max(2, Math.round((face.axis === "W" ? result.reqW : result.reqL) / 700)),
+        flap: "none",
+        curtain: null,
+        screen: null
+      };
+    });
+    let photo;
+    let photoCaption;
+    const glassCount = glassIds.length;
+    if (cfg.glass) {
+      const byCount = { 1: ["agp-attached-1face", "유리 1면 (카탈로그 P.1126)"], 2: ["agp-attached-2face", "유리 2면 (카탈로그 P.1129)"], 3: ["agp-wall-3glass", "유리 3면 (카탈로그 P.1127)"], 4: ["agp-all4-night", "유리 4면 (카탈로그 P.1129)"] };
+      const pick = byCount[Math.min(4, Math.max(1, glassCount))];
+      photo = PREVIEW_IMG + pick[0] + ".jpg";
+      photoCaption = `참고 사진 · 올글라스포치 ${pick[1]} 시공 예와 유사한 구성`;
+    } else if (shade) {
+      photo = PREVIEW_IMG + "hyr-shade.jpg";
+      photoCaption = "참고 사진 · 홈야드루프Ⅱ + 로프식 개폐 셰이드 (카탈로그 P.1161)";
+    } else if (wallMount && hasCeiling) {
+      photo = PREVIEW_IMG + "hyr-wall-ceiling.jpg";
+      photoCaption = "참고 사진 · 벽부착형, 내천정 보드 (카탈로그 P.1162)";
+    } else if (hasCeiling && (downlights || lightingFace || lineLight)) {
+      photo = PREVIEW_IMG + "hyr-night-lighting.jpg";
+      photoCaption = "참고 사진 · 내천정 + 조명 야간 (카탈로그 P.1127)";
+    } else if (hasCeiling) {
+      photo = PREVIEW_IMG + "hyr-ceiling.jpg";
+      photoCaption = "참고 사진 · 내천정 에버아트보드 (카탈로그 P.1161)";
+    } else {
+      photo = HYR_IMG + (spec.kind === "double" ? "homeyard-roof-double.jpg" : "homeyard-roof.jpg");
+      photoCaption = `참고 사진 · 홈야드루프Ⅱ ${spec.kind === "double" ? "더블" : "싱글"} 사양 (카탈로그 P.1166)`;
+    }
+    const legend = [
+      `${wallMount ? "벽부착형" : "독립형"} · ${spec.label}`,
+      glassCount ? `유리 ${glassCount}면 (${result.glassFaces.map((face) => face.label).join("·")})` : "",
+      hasCeiling ? `내천정 ${grade.label.replace("에버아트보드 ", "")} · ${ceilingColor.label}` : "",
+      lineLight ? "라인라이트" : "",
+      downlights ? `다운라이트 ${downlights}개` : "",
+      lightingFace ? "라이팅 페이스" : "",
+      shade ? `로프식 셰이드 · ${shade === "canvas" ? "캔버스" : "셰이드넷"}` : "",
+      panels ? `디자인 패널 ${panels}장` : "",
+      movingPosts ? `이동주 ${movingPosts}본` : "",
+      result.roof.id === "brown_smoke" ? "지붕 브라운 스모크" : ""
+    ];
+    return {
+      widthMm: result.reqW,
+      depthMm: result.reqL,
+      heightMm: result.pick.height.mm,
+      frameColorId: result.color.id,
+      glassTint: "standard",
+      roof: { tint: result.roof.id, ceilingSwatch: hasCeiling ? ceilingColor.swatch : null, lineLight, double: spec.kind === "double", r: spec.kind === "singleR", shade, panels, lightingFace },
+      faces,
+      downlights,
+      photo,
+      photoCaption,
+      legend
+    };
+  }
+
   function renderHyr() {
     syncHyrDownlight();
     const result = calculateHyr();
     renderHyrMedia(result);
+    renderStructurePreview(hyrPreview, result.valid ? buildHyrPreviewModel(result) : null);
     hyrWarning.innerHTML = result.warnings.map((text) => `<p>${escapeHtml(text)}</p>`).join("");
     hyrWarning.hidden = !result.warnings.length;
     if (!result.valid) {
