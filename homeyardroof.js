@@ -530,6 +530,8 @@ function createHyrConfigurator(cfg) {
     return {
       widthMm: result.reqW,
       depthMm: result.reqL,
+      widthNote: `${spec.label}${spec.mm > result.reqW ? " 부재 절단" : ""}`,
+      depthNote: `${result.pick.lKey} (${formatNumber(result.pick.lMm)})${result.pick.lMm > result.reqL ? " 부재 절단" : ""}`,
       heightMm: result.pick.height.mm,
       frameColorId: result.color.id,
       glassTint: "standard",

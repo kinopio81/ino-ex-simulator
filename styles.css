@@ -1323,7 +1323,7 @@ img {
 }
 
 .porch-face-wrap {
-  overflow-x: auto;
+  overflow: visible; /* 스와치 드롭다운이 표 바깥으로 펼쳐져야 하므로 자르지 않는다 */
 }
 
 .porch-face-table {
@@ -1464,6 +1464,12 @@ img {
   border: 1px solid var(--line);
   background: var(--panel-strong);
   box-shadow: 0 18px 40px rgba(22, 33, 29, 0.16);
+}
+
+.swatch-picker__list.is-up {
+  top: auto;
+  bottom: calc(100% + 6px);
+  box-shadow: 0 -12px 36px rgba(22, 33, 29, 0.16);
 }
 
 .swatch-picker__list li {

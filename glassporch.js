@@ -1062,9 +1062,15 @@ function buildPorchPreviewModel(result) {
     screenCount ? `방충망 ${screenCount}면` : "",
     result.roof.id === "brown_smoke" ? "지붕 브라운 스모크" : ""
   ];
+  const sizeNote = (axis) => {
+    const typeLabel = axis.step.label.replace(/^(정면|깊이)\s*/, "");
+    return axis.cut ? `${typeLabel} 부재 절단` : `${typeLabel} · 실치수 ${formatNumber(axis.step.actual)}`;
+  };
   return {
-    widthMm: result.width.step.actual,
-    depthMm: result.depth.step.actual,
+    widthMm: result.width.requestedMm,
+    depthMm: result.depth.requestedMm,
+    widthNote: sizeNote(result.width),
+    depthNote: sizeNote(result.depth),
     heightMm: result.height.mm,
     frameColorId: result.frameColor.id,
     glassTint: result.glassType.id,
@@ -1176,6 +1182,16 @@ function createSwatchPicker(selectEl, options) {
     document.querySelectorAll(".swatch-picker__list").forEach((other) => { other.hidden = true; });
     list.hidden = !willOpen;
     button.setAttribute("aria-expanded", String(willOpen));
+    if (!willOpen) return;
+    // 버튼이 화면 아래쪽에 있으면 목록을 위로 펼치고, 그래도 잘리면 목록이 보이도록 스크롤한다.
+    list.classList.remove("is-up");
+    const rect = button.getBoundingClientRect();
+    const listHeight = Math.min(list.scrollHeight + 12, 320);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < listHeight + 16 && rect.top > spaceBelow) list.classList.add("is-up");
+    window.requestAnimationFrame(() => {
+      if (typeof list.scrollIntoView === "function") list.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
   });
   list.addEventListener("mouseover", (event) => {
     const li = event.target.closest("li[data-value]");

@@ -40,10 +40,12 @@ function previewNumber(value) {
 function orientPreview(model) {
   const f = model.faces;
   const attached = ["front", "back", "left", "right"].find((key) => f[key] && f[key].finish === "building") || null;
-  if (attached === "front") return { W: model.widthMm, D: model.depthMm, faces: { front: f.back, back: f.front, left: f.right, right: f.left } };
-  if (attached === "left") return { W: model.depthMm, D: model.widthMm, faces: { front: f.right, back: f.left, left: f.front, right: f.back } };
-  if (attached === "right") return { W: model.depthMm, D: model.widthMm, faces: { front: f.left, back: f.right, left: f.back, right: f.front } };
-  return { W: model.widthMm, D: model.depthMm, faces: { front: f.front, back: f.back, left: f.left, right: f.right } };
+  const asWidth = { W: model.widthMm, D: model.depthMm, wIsWidth: true, wNote: model.widthNote || "", dNote: model.depthNote || "" };
+  const asDepth = { W: model.depthMm, D: model.widthMm, wIsWidth: false, wNote: model.depthNote || "", dNote: model.widthNote || "" };
+  if (attached === "front") return { ...asWidth, faces: { front: f.back, back: f.front, left: f.right, right: f.left } };
+  if (attached === "left") return { ...asDepth, faces: { front: f.right, back: f.left, left: f.front, right: f.back } };
+  if (attached === "right") return { ...asDepth, faces: { front: f.left, back: f.right, left: f.back, right: f.front } };
+  return { ...asWidth, faces: { front: f.front, back: f.back, left: f.left, right: f.right } };
 }
 
 function previewSvg(model) {
@@ -55,15 +57,16 @@ function previewSvg(model) {
   const frameHex = PREVIEW_FRAME_HEX[model.frameColorId] || "#3a3a3a";
   const roof = model.roof || {};
 
-  const project = (x, y, z) => [(x - y) * 0.866 * s, (x + y) * 0.5 * s - z * s];
+  // 등각 투영. x 는 오른쪽 위, y 는 왼쪽 위로 뻗어 (0,0) 모서리가 관찰자에게 가장 가깝다.
+  const project = (x, y, z) => [(x - y) * 0.866 * s, -(x + y) * 0.5 * s - z * s];
   const corners = [[0, 0, 0], [W, 0, 0], [0, D, 0], [W, D, 0], [0, 0, H], [W, 0, H], [0, D, H], [W, D, H]].map((p) => project(...p));
   const minX = Math.min(...corners.map((p) => p[0]));
   const maxX = Math.max(...corners.map((p) => p[0]));
   const minY = Math.min(...corners.map((p) => p[1]));
   const maxY = Math.max(...corners.map((p) => p[1]));
-  const viewH = Math.max(250, maxY - minY + 86);
+  const viewH = Math.max(260, maxY - minY + 104);
   const ox = (PREVIEW_VIEW_W - (maxX - minX)) / 2 - minX;
-  const oy = viewH - 44 - maxY;
+  const oy = viewH - 62 - maxY;
   const pt = (x, y, z) => {
     const [px, py] = project(x, y, z);
     return [px + ox, py + oy];
@@ -76,9 +79,9 @@ function previewSvg(model) {
   const lateLabels = [];
   let body0 = "";
   let patternCount = 0;
-  const skewX = "matrix(0.866,0.5,0,1,0,0)";
-  const skewY = "matrix(-0.866,0.5,0,1,0,0)";
-  const skewTop = "matrix(0.866,0.5,-0.866,0.5,0,0)";
+  const skewX = "matrix(0.866,-0.5,0,1,0,0)";
+  const skewY = "matrix(-0.866,-0.5,0,1,0,0)";
+  const skewTop = "matrix(0.866,-0.5,-0.866,-0.5,0,0)";
   const imagePattern = (url, transform, size = 34) => {
     const id = `pv-img-${++patternCount}`;
     defs.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="${transform}"><image href="${previewEscape(url)}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid slice"/></pattern>`);
@@ -105,10 +108,14 @@ function previewSvg(model) {
   const glassStroke = model.glassTint === "frame" ? frameHex : night ? "#c9c2b4" : "#8e9aa4";
   const lateLights = [];
   const tag = (p, text, accent) => {
-    const w = String(text).length * 10.2 + 16;
+    const rows = (Array.isArray(text) ? text : [text]).filter(Boolean);
+    if (!rows.length) return;
+    const w = Math.max(...rows.map((row) => String(row).length)) * 9.8 + 16;
+    const h = rows.length * 13 + 7;
     const x = p[0] - w / 2;
-    const y = p[1] - 10;
-    lateLabels.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="rgba(255,255,255,0.94)" stroke="${accent}" stroke-width="1.2"/><text x="${p[0].toFixed(1)}" y="${(p[1] + 4).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f2a24">${previewEscape(text)}</text>`);
+    const y = p[1] - h / 2;
+    const texts = rows.map((row, i) => `<text x="${p[0].toFixed(1)}" y="${(y + 13.5 + i * 13).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2f2a24">${previewEscape(row)}</text>`).join("");
+    lateLabels.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="rgba(255,255,255,0.94)" stroke="${accent}" stroke-width="1.2"/>${texts}`);
   };
   if (night) {
     const gid = `pv-dusk-${++patternCount}`;
@@ -118,20 +125,30 @@ function previewSvg(model) {
     body0 = `<rect x="0" y="0" width="${PREVIEW_VIEW_W}" height="${viewH.toFixed(0)}" rx="14" fill="url(#${gid})"/>`;
   }
 
-  // 면 그리기. bl→br 방향이 면의 길이 방향, z 는 높이
-  const drawFace = (face, bl, br, dir) => {
+  // 면 그리기. bl→br 방향이 면의 길이 방향, z 는 높이, off 는 면 바깥쪽(관찰자 쪽)으로의 거리(mm)
+  const CURTAIN_LABEL = { white: "화이트", sand: "샌드", grey: "그레이" };
+  const drawFace = (face, bl, br, dir, tagZ = 0.5) => {
     if (!face) return "";
-    const len = Math.hypot(br[0] - bl[0], br[1] - bl[1]);
-    const at = (t, z) => pt(bl[0] + (br[0] - bl[0]) * t, bl[1] + (br[1] - bl[1]) * t, z);
-    const quad = (t0, t1, z0, z1) => [at(t0, z0), at(t1, z0), at(t1, z1), at(t0, z1)];
+    const labels = [];
+    const dx = br[0] - bl[0];
+    const dy = br[1] - bl[1];
+    const len = Math.hypot(dx, dy);
+    const nx = dy / len;
+    const ny = -dx / len;
+    const at = (t, z, off = 0) => pt(bl[0] + dx * t + nx * off, bl[1] + dy * t + ny * off, z);
+    const quad = (t0, t1, z0, z1, off = 0) => [at(t0, z0, off), at(t1, z0, off), at(t1, z1, off), at(t0, z1, off)];
+    // 비스듬한 판: (t0, off0) → (t1, off1) 사이, z0~z1
+    const slab = (t0, off0, t1, off1, z0, z1) => [at(t0, z0, off0), at(t1, z0, off1), at(t1, z1, off1), at(t0, z1, off0)];
     const transform = dir === "x" ? skewX : skewY;
+    const shade = dir === "y" ? "rgba(0,0,0,0.16)" : "rgba(255,255,255,0.08)";
     let out = "";
     if (face.finish === "building") {
       out += polygon(quad(-0.06, 1.06, 0, H + 1100), `fill="${hatchPattern(transform)}" stroke="#b3ada1" stroke-width="1"`);
-      const c = at(0.96, H + 850);
-      lateLabels.push(`<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" text-anchor="start" font-size="10" font-weight="600" fill="${inkSoft}">건물 벽 · ${previewEscape(face.label)} 접속</text>`);
+      tag(at(0.5, H + 880), `건물 벽 · ${face.label} 접속`, "#b3ada1");
       return out;
     }
+
+    // ---- 기본 마감
     if (face.finish === "glass") {
       out += polygon(quad(0, 1, 0, H), `fill="${glassFill}" stroke="${glassStroke}" stroke-width="1.4"`);
       const panels = Math.max(2, face.panels || Math.round(len / 700));
@@ -140,16 +157,12 @@ function previewSvg(model) {
         out += line(at(0, 950), at(1, 950), `stroke="${frameHex}" stroke-width="1"`);
         out += line(at(0, H - 280), at(1, H - 280), `stroke="${frameHex}" stroke-width="1"`);
       }
-      // 유리 광택
       out += polygon(quad(0.08, 0.2, 200, H - 150), `fill="#ffffff" opacity="0.18"`);
     } else if (face.finish === "wall") {
       const boardUrl = face.swatch || `assets/options/colors/frame-${model.frameColorId}.jpg`;
       out += polygon(quad(0, 1, 0, H), `fill="${imagePattern(boardUrl, transform, 64)}" stroke="${frameHex}" stroke-width="2"`);
-      // 측면 음영으로 입체감
-      out += polygon(quad(0, 1, 0, H), `fill="${dir === "y" ? "rgba(0,0,0,0.16)" : "rgba(255,255,255,0.08)"}"`);
-      // 에버아트보드 910mm 폭 세로 줄눈 + 보드 결
-      const faceMm = len; // bl/br 는 mm 좌표
-      const boards = Math.max(2, Math.round(faceMm / 910));
+      out += polygon(quad(0, 1, 0, H), `fill="${shade}"`);
+      const boards = Math.max(2, Math.round(len / 910));
       for (let i = 1; i < boards; i += 1) out += line(at(i / boards, 60), at(i / boards, H - 60), `stroke="#000" stroke-width="1.1" opacity="0.38"`);
       for (let i = 0; i < boards; i += 1) {
         for (let g = 1; g <= 3; g += 1) {
@@ -157,35 +170,116 @@ function previewSvg(model) {
           out += line(at(t, 120), at(t, H - 120), `stroke="#000" stroke-width="0.5" opacity="0.09"`);
         }
       }
-      // 상하 레일
       out += polygon(quad(0, 1, H - 110, H), `fill="${frameHex}"`);
       out += polygon(quad(0, 1, 0, 110), `fill="${frameHex}"`);
-      tag(at(0.5, H * 0.74), `벽면세트 · 에버아트보드`, frameHex);
-    } else if (face.finish === "slideTextile") {
-      out += polygon(quad(0, 1, 0, H), `fill="#e6dcc8" stroke="${frameHex}" stroke-width="1.2"`);
-      for (let z = 400; z < H; z += 400) out += line(at(0, z), at(1, z), `stroke="#000" stroke-width="0.6" opacity="0.08"`);
-    } else if (face.finish === "slideBoard") {
-      out += polygon(quad(0, 1, 0, H), `fill="${imagePattern("assets/options/slide-screen-board.jpg", transform, 40)}" stroke="${frameHex}" stroke-width="1.2"`);
-    }
-    if (face.flap && face.flap !== "none") {
-      const z0 = H - 620;
-      if (face.flap === "grid") {
-        out += polygon(quad(0, 1, z0, H), `fill="#ffffff" opacity="0.55" stroke="${frameHex}" stroke-width="1"`);
-        for (let z = z0 + 80; z < H; z += 85) out += line(at(0, z), at(1, z), `stroke="${frameHex}" stroke-width="0.9"`);
-      } else {
-        out += polygon(quad(0, 1, z0, H), `fill="${imagePattern(`assets/options/colors/frame-${model.frameColorId}.jpg`, transform, 28)}" stroke="${frameHex}" stroke-width="1"`);
+      labels.push("벽면세트 · 에버아트보드");
+    } else if (face.finish === "slideTextile" || face.finish === "slideBoard") {
+      // 슬라이드스크린: 상부 레일에 매단 큰 미닫이 패널 3장. 패널마다 살짝 엇갈려(앞뒤) 겹쳐 보이게 그린다.
+      const textile = face.finish === "slideTextile";
+      const panelsN = 3;
+      out += polygon(quad(0, 1, H - 120, H), `fill="${frameHex}"`);
+      for (let i = 0; i < panelsN; i += 1) {
+        const t0 = i / panelsN;
+        const t1 = (i + 1) / panelsN;
+        const off = i % 2 ? 0 : 70;
+        const q = quad(t0 + 0.004, t1 - 0.004, 90, H - 130, off);
+        if (textile) {
+          out += polygon(q, `fill="#8e9094" stroke="${frameHex}" stroke-width="1.2"`);
+          // 직물 결 (사선)
+          for (let k = 1; k < 7; k += 1) {
+            const tt = t0 + (t1 - t0) * k / 7;
+            out += line(at(tt, 140, off), at(tt, H - 180, off), `stroke="#ffffff" stroke-width="0.6" opacity="0.14"`);
+          }
+          for (let z = 400; z < H - 200; z += 360) out += line(at(t0 + 0.01, z, off), at(t1 - 0.01, z, off), `stroke="#ffffff" stroke-width="0.6" opacity="0.1"`);
+        } else {
+          out += polygon(q, `fill="${imagePattern("assets/options/slide-screen-board.jpg", transform, 46)}" stroke="${frameHex}" stroke-width="1.2"`);
+          for (let k = 1; k < 4; k += 1) {
+            const tt = t0 + (t1 - t0) * k / 4;
+            out += line(at(tt, 140, off), at(tt, H - 180, off), `stroke="#000" stroke-width="0.7" opacity="0.25"`);
+          }
+        }
+        out += polygon(q, `fill="${shade}"`);
+        // 행거(레일 고리)
+        [0.25, 0.75].forEach((f) => {
+          const h0 = at(t0 + (t1 - t0) * f, H - 130, off);
+          const h1 = at(t0 + (t1 - t0) * f, H - 40, off);
+          out += line(h0, h1, `stroke="${frameHex}" stroke-width="2"`);
+        });
       }
+      labels.push(`슬라이드스크린 · ${textile ? "텍스타일" : "아트보드"}`);
     }
+
+    // ---- 비엔타 커튼: 유리 안쪽 레일에 매단 얇은 주름 커튼 (반투명)
     if (face.curtain) {
       const hex = PREVIEW_CURTAIN_HEX[face.curtain] || "#e8e2d6";
-      const folds = Math.max(6, Math.round(len / 9));
+      const inner = -60;
+      const folds = Math.max(8, Math.round(len / 160));
       for (let i = 0; i < folds; i += 1) {
-        out += polygon(quad(i / folds, (i + 1) / folds, 180, H - 90), `fill="${hex}" opacity="${i % 2 ? 0.95 : 0.7}"`);
+        out += polygon(quad(i / folds, (i + 1) / folds, 140, H - 110, inner), `fill="${hex}" opacity="${i % 2 ? 0.62 : 0.4}"`);
       }
+      for (let i = 1; i < folds; i += 1) out += line(at(i / folds, 140, inner), at(i / folds, H - 110, inner), `stroke="#000" stroke-width="0.4" opacity="0.1"`);
+      // 레일 + 링
+      out += line(at(0, H - 100, inner), at(1, H - 100, inner), `stroke="#9a9a96" stroke-width="1.6"`);
+      const rings = Math.max(6, Math.round(len / 300));
+      for (let i = 0; i <= rings; i += 1) {
+        const r = at(i / rings, H - 100, inner);
+        out += `<circle cx="${r[0].toFixed(1)}" cy="${r[1].toFixed(1)}" r="1.6" fill="#f5f5f2" stroke="#8f8f8a" stroke-width="0.6"/>`;
+      }
+      labels.push(`커튼 · ${CURTAIN_LABEL[face.curtain] || ""}`.trim());
     }
-    if (face.screen) {
-      out += polygon(quad(0, 1, 0, H), `fill="${meshPattern(transform, face.screen === "white" ? "#f4f4f4" : "#2b2b2b")}" opacity="0.5"`);
+
+    // ---- 방충망: 유리문 면에만. 플리츠(세로 주름) 망이 한쪽 절반을 덮은 모습
+    if (face.screen && face.finish === "glass") {
+      const dark = face.screen !== "white";
+      const frame = dark ? "#2b2b2b" : "#f1f1ee";
+      const off = 40;
+      const q = quad(0.5, 1, 40, H - 40, off);
+      out += polygon(q, `fill="${dark ? "rgba(40,40,40,0.22)" : "rgba(255,255,255,0.35)"}" stroke="${frame}" stroke-width="2"`);
+      const pleats = Math.max(10, Math.round(len / 2 / 60));
+      for (let i = 1; i < pleats; i += 1) {
+        const t = 0.5 + 0.5 * i / pleats;
+        out += line(at(t, 60, off), at(t, H - 60, off), `stroke="${dark ? "#1e1e1e" : "#ffffff"}" stroke-width="0.6" opacity="${i % 2 ? 0.55 : 0.3}"`);
+      }
+      // 손잡이 세로틀
+      out += polygon(quad(0.49, 0.515, 40, H - 40, off), `fill="${frame}"`);
+      labels.push(`방충망 · ${dark ? "블랙" : "화이트"}`);
     }
+
+    // ---- 플랩스크린: 면 앞 전용 기둥·도리에 선 전신 폴딩도어 (2장 1조). 양쪽에 접힌 모습으로 그린다.
+    if (face.flap && face.flap !== "none") {
+      const grid = face.flap === "grid";
+      const depth = 620;
+      const z0 = 60;
+      const z1 = H - 60;
+      const frontRail = quad(-0.01, 1.01, H - 110, H, depth);
+      // 전용 기둥 2본
+      [0, 1].forEach((t) => out += line(at(t, 0, depth), at(t, H, depth), `stroke="${frameHex}" stroke-width="${Math.max(3, 100 * s).toFixed(1)}"`));
+      const panelFill = grid
+        ? `fill="#ffffff" opacity="0.72"`
+        : `fill="${imagePattern(`assets/options/colors/frame-${model.frameColorId}.jpg`, transform, 30)}"`;
+      const drawPanel = (ta, oa, tb, ob) => {
+        const poly = slab(ta, oa, tb, ob, z0, z1);
+        out += polygon(poly, `${panelFill} stroke="${frameHex}" stroke-width="1.4" stroke-linejoin="round"`);
+        if (grid) {
+          for (let z = z0 + 120; z < z1; z += 110) out += line(at(ta, z, oa), at(tb, z, ob), `stroke="${frameHex}" stroke-width="1" opacity="0.9"`);
+        } else {
+          for (let k = 1; k < 3; k += 1) {
+            const f = k / 3;
+            out += line(at(ta + (tb - ta) * f, z0 + 40, oa + (ob - oa) * f), at(ta + (tb - ta) * f, z1 - 40, oa + (ob - oa) * f), `stroke="#000" stroke-width="0.6" opacity="0.25"`);
+          }
+        }
+        out += polygon(poly, `fill="${shade}"`);
+      };
+      // 왼쪽: 기둥 쪽으로 접힌 2장 (지그재그, 면을 가리지 않음)
+      drawPanel(0, depth, 0.05, depth - 430);
+      drawPanel(0.05, depth - 430, 0.1, depth - 40);
+      // 오른쪽: 닫힌 1장 + 접히는 중인 1장 → 질감과 개폐 방식이 함께 보인다
+      drawPanel(1, depth, 0.74, depth);
+      drawPanel(0.74, depth, 0.66, depth - 430);
+      out += polygon(frontRail, `fill="${frameHex}"`);
+      labels.push(`플랩스크린 · ${grid ? "알루미늄 격자" : "아트보드"}`);
+    }
+    if (labels.length) tag(at(0.5, H * tagZ), labels, frameHex);
     return out;
   };
 
@@ -224,8 +318,8 @@ function previewSvg(model) {
     }
   }
   // 뒷면·우측면 (뒤쪽부터)
-  body += drawFace(faces.back, [W, D], [0, D], "x");
-  body += drawFace(faces.right, [W, 0], [W, D], "y");
+  body += drawFace(faces.back, [W, D], [0, D], "x", 0.8);
+  body += drawFace(faces.right, [W, 0], [W, D], "y", 0.8);
   if (!wallMount) {
     body += post(0, D);
     body += post(W, D);
@@ -298,8 +392,8 @@ function previewSvg(model) {
   body += line(pt(0, 0, H), pt(W, 0, H), `stroke="${frameHex}" stroke-width="${girder.toFixed(1)}"`);
   body += line(pt(0, 0, H), pt(0, D, H), `stroke="${frameHex}" stroke-width="${girder.toFixed(1)}"`);
   // 좌측면·정면 (앞쪽)
-  body += drawFace(faces.left, [0, D], [0, 0], "y");
-  body += drawFace(faces.front, [0, 0], [W, 0], "x");
+  body += drawFace(faces.left, [0, D], [0, 0], "y", 0.45);
+  body += drawFace(faces.front, [0, 0], [W, 0], "x", 0.45);
   body += post(0, 0);
   body += post(W, 0);
   body += lateLights.join("");
@@ -312,11 +406,21 @@ function previewSvg(model) {
   // 치수 표기
   const label = (p, text, anchor, dx, dy) => `<text x="${(p[0] + dx).toFixed(1)}" y="${(p[1] + dy).toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="${ink}">${previewEscape(text)}</text>`;
   const dim = (a, b) => line(a, b, `stroke="${night ? "#b9b3a6" : "#8a8f8c"}" stroke-width="0.8" stroke-dasharray="3 2"`);
+  const note = (p, text, anchor, dx, dy) => text
+    ? `<text x="${(p[0] + dx).toFixed(1)}" y="${(p[1] + dy).toFixed(1)}" text-anchor="${anchor}" font-size="9" fill="${inkSoft}">${previewEscape(text)}</text>`
+    : "";
   const fm = pt(W / 2, 0, 0);
   const lm = pt(0, D / 2, 0);
-  body += dim(pt(0, 0, -160), pt(W, 0, -160)) + label([fm[0], fm[1] + 160 * s], `${faces.front.label} ${previewNumber(W)}`, "middle", 10, 14);
-  body += dim(pt(0, 0, -160), pt(0, D, -160)) + label([lm[0], lm[1] + 160 * s], `${faces.left.label} ${previewNumber(D)}`, "end", -12, 14);
-  body += label(pt(W, 0, H / 2), `높이 ${previewNumber(H)}`, "start", 12, 4);
+  const wName = o.wIsWidth ? "정면 폭" : "깊이";
+  const dName = o.wIsWidth ? "깊이" : "정면 폭";
+  body += dim(pt(0, 0, -160), pt(W, 0, -160))
+    + label([fm[0], fm[1] + 160 * s], `${wName} ${previewNumber(W)}`, "middle", 12, 14)
+    + note([fm[0], fm[1] + 160 * s], o.wNote, "middle", 12, 26);
+  body += dim(pt(0, 0, -160), pt(0, D, -160))
+    + label([lm[0], lm[1] + 160 * s], `${dName} ${previewNumber(D)}`, "end", -12, 14)
+    + note([lm[0], lm[1] + 160 * s], o.dNote, "end", -12, 26);
+  const frontFlap = faces.front && faces.front.flap && faces.front.flap !== "none";
+  body += label(pt(W, 0, H / 2), `높이 ${previewNumber(H)}`, "start", frontFlap ? 12 + 620 * 0.866 * s : 12, 4);
 
   return `<svg viewBox="0 0 ${PREVIEW_VIEW_W} ${viewH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="구성 미리보기 도면"><defs>${defs.join("")}</defs>${body}</svg>`;
 }
