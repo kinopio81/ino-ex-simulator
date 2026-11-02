@@ -321,17 +321,83 @@ function previewSvg(model) {
   return `<svg viewBox="0 0 ${PREVIEW_VIEW_W} ${viewH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="구성 미리보기 도면"><defs>${defs.join("")}</defs>${body}</svg>`;
 }
 
+/*
+  모바일(한 열 레이아웃)에서는 결과 패널이 폼 아래로 내려가 도면이 안 보이므로,
+  각 구성 패널 맨 위에 붙는 접이식 독(.porch-dock)에도 같은 도면을 그린다. 열림/닫힘은 기억한다.
+*/
+const PREVIEW_DOCK_KEY = "inoex-preview-dock-open-v1";
+
+function previewDockOpen() {
+  try {
+    return window.localStorage.getItem(PREVIEW_DOCK_KEY) !== "0";
+  } catch (error) {
+    return true;
+  }
+}
+
+function setPreviewDockOpen(dock, open) {
+  dock.classList.toggle("is-open", open);
+  const toggle = dock.querySelector(".porch-dock__toggle");
+  if (toggle) toggle.setAttribute("aria-expanded", String(open));
+  const body = dock.querySelector(".porch-dock__body");
+  if (body) body.hidden = !open;
+}
+
+function bindPreviewDock(dock) {
+  if (dock.dataset.bound) return;
+  dock.dataset.bound = "1";
+  setPreviewDockOpen(dock, previewDockOpen());
+  const toggle = dock.querySelector(".porch-dock__toggle");
+  if (!toggle) return;
+  toggle.addEventListener("click", () => {
+    const next = !dock.classList.contains("is-open");
+    setPreviewDockOpen(dock, next);
+    try {
+      window.localStorage.setItem(PREVIEW_DOCK_KEY, next ? "1" : "0");
+    } catch (error) {
+      /* 저장 불가 환경은 무시 */
+    }
+  });
+}
+
+function renderPreviewDock(container, model, svg, legend) {
+  const layout = container.closest(".porch-layout");
+  const dock = layout ? layout.querySelector(".porch-dock") : null;
+  if (!dock) return;
+  if (!model) {
+    dock.hidden = true;
+    return;
+  }
+  bindPreviewDock(dock);
+  dock.hidden = false;
+  const summary = dock.querySelector(".porch-dock__summary");
+  if (summary) {
+    const optionCount = Math.max(0, legend.length - 1);
+    summary.textContent = `${previewNumber(model.widthMm)} × ${previewNumber(model.depthMm)} × 높이 ${previewNumber(model.heightMm)}mm${optionCount ? ` · 옵션 ${optionCount}` : ""}`;
+  }
+  const body = dock.querySelector(".porch-dock__body");
+  if (body) {
+    body.innerHTML = `
+      <div class="porch-preview__drawing">${svg}</div>
+      ${legend.length ? `<div class="porch-preview__legend">${legend.map((text) => `<span>${previewEscape(text)}</span>`).join("")}</div>` : ""}
+    `;
+  }
+}
+
 function renderStructurePreview(container, model) {
   if (!container) return;
   if (!model) {
     container.innerHTML = "";
     container.hidden = true;
+    renderPreviewDock(container, null, "", []);
     return;
   }
   container.hidden = false;
   const legend = (model.legend || []).filter(Boolean);
+  const svg = previewSvg(model);
+  renderPreviewDock(container, model, svg, legend);
   container.innerHTML = `
-    <div class="porch-preview__drawing">${previewSvg(model)}</div>
+    <div class="porch-preview__drawing">${svg}</div>
     ${model.photo ? `
       <figure class="porch-preview__photo">
         <img src="${previewEscape(model.photo)}" alt="">
