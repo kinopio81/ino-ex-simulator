@@ -30,8 +30,6 @@
   { category: "가든 액세사리 / (벤치형)", name: "IKS 벤치", spec: "벤치 1800x400x660", packUnit: "각 1EA씩 / 별도 포장", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "단품", price: 2000000 }] },
   { category: "가든 액세사리 / (벤치형)", name: "IKS 테이블(1EA) & 벤치(2EA) SET", spec: "테이블 1800x900x830 / 벤치 1800x400x660 x 2EA", packUnit: "각 1EA씩 / 별도 포장", unit: "SET", leadTime: "-", supplier: "-", options: [{ label: "SET", price: 8134000 }] },
   { category: "가든 액세사리 / (벤치형)", name: "연속형 벤치", spec: "1090x500x520", packUnit: "각 1EA씩", unit: "EA", leadTime: "약 2개월", supplier: "-", options: [{ label: "기본", price: 2000000 }] },
-  { category: "가든 액세사리 / (카포트)", name: "홈야드루프 / 카야드 스타일", spec: "W6000xL6000xH3000", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 25409000 }] },
-  { category: "가든 액세사리 / (파고라)", name: "홈야드루프 / 글라스포치", spec: "W4000xL6000xH3000 / 3면 유리 포함", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 30408000 }] },
   { category: "가든 액세사리 / (내, 외장재)", name: "에버아트 보드 / EVERART BOARD", spec: "910x2440", packUnit: "1장", unit: "m2", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 336000 }] },
   { category: "가든 액세사리 / (내, 외장재, 독립재)", name: "에버아트 우드 / EVERART WOOD", spec: "75x75x1800 / 각재", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 138000 }] },
   { category: "가든 액세사리 / (가든 휀스)", name: "센시아 휀스 / 세로 가는 격자", spec: "600x2000", packUnit: "1EA", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "기본", price: 270000 }] },
@@ -225,16 +223,6 @@ const fixedInstallRules = {
     kind: "fixed",
     methods: [{ id: "artsign", label: "기본 시공", rate: 50000, unitLabel: "SET당 시공비" }],
     note: "명패 설치 시공비를 반영합니다."
-  },
-  "홈야드루프 / 카야드 스타일": {
-    kind: "fixed",
-    methods: [{ id: "carport", label: "기본 시공", rate: 4800000, unitLabel: "EA당 시공비" }],
-    note: "카포트 시공 고정비가 반영됩니다."
-  },
-  "홈야드루프 / 글라스포치": {
-    kind: "fixed",
-    methods: [{ id: "pergola", label: "기본 시공", rate: 4800000, unitLabel: "EA당 시공비" }],
-    note: "파고라 시공 고정비가 반영됩니다."
   },
   "에버아트 보드 / EVERART BOARD": {
     kind: "area",
