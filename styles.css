@@ -1637,6 +1637,23 @@ img {
   gap: 12px;
 }
 
+/* 데스크탑(두 열 레이아웃): 결과 패널을 화면 상단에 고정해 스크롤 중에도 도면이 보이게 한다.
+   패널 내용이 화면보다 길면 패널 안에서 스크롤한다. */
+@media screen and (min-width: 1081px) {
+  .porch-layout {
+    align-items: start;
+  }
+
+  .porch-result {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+
 /* 모바일 상단 고정 미리보기 독 (한 열 레이아웃에서만 표시) */
 .porch-dock {
   display: none;

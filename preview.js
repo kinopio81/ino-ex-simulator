@@ -48,6 +48,7 @@ function orientPreview(model) {
   return { ...asWidth, faces: { front: f.front, back: f.back, left: f.left, right: f.right } };
 }
 
+let previewSvgSeq = 0;
 function previewSvg(model) {
   const s = PREVIEW_SCALE;
   const o = orientPreview(model);
@@ -78,22 +79,24 @@ function previewSvg(model) {
   const defs = [];
   const lateLabels = [];
   let body0 = "";
+  // 같은 페이지에 도면이 여럿(모바일 독 + 결과 패널) 있어도 패턴·그라디언트 id 가 겹치지 않게 한다.
+  const uid = `pv${++previewSvgSeq}`;
   let patternCount = 0;
   const skewX = "matrix(0.866,-0.5,0,1,0,0)";
   const skewY = "matrix(-0.866,-0.5,0,1,0,0)";
   const skewTop = "matrix(0.866,-0.5,-0.866,-0.5,0,0)";
   const imagePattern = (url, transform, size = 34) => {
-    const id = `pv-img-${++patternCount}`;
+    const id = `${uid}-img-${++patternCount}`;
     defs.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="${transform}"><image href="${previewEscape(url)}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid slice"/></pattern>`);
     return `url(#${id})`;
   };
   const hatchPattern = (transform) => {
-    const id = `pv-hatch-${++patternCount}`;
+    const id = `${uid}-hatch-${++patternCount}`;
     defs.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="${transform}"><rect width="8" height="8" fill="#dcd7cd"/><path d="M0 8 L8 0" stroke="#b7b1a5" stroke-width="1"/></pattern>`);
     return `url(#${id})`;
   };
   const meshPattern = (transform, color) => {
-    const id = `pv-mesh-${++patternCount}`;
+    const id = `${uid}-mesh-${++patternCount}`;
     defs.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="${transform}"><path d="M0 0H4M0 0V4" stroke="${color}" stroke-width="0.6" opacity="0.7"/></pattern>`);
     return `url(#${id})`;
   };
@@ -118,10 +121,10 @@ function previewSvg(model) {
     lateLabels.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="rgba(255,255,255,0.94)" stroke="${accent}" stroke-width="1.2"/>${texts}`);
   };
   if (night) {
-    const gid = `pv-dusk-${++patternCount}`;
+    const gid = `${uid}-dusk`;
     defs.push(`<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a3a" stop-opacity="0.82"/><stop offset="1" stop-color="#3c3a3a" stop-opacity="0.72"/></linearGradient>`);
-    defs.push(`<radialGradient id="pv-halo"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.95"/><stop offset="0.35" stop-color="#ffd978" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd978" stop-opacity="0"/></radialGradient>`);
-    defs.push(`<radialGradient id="pv-pool"><stop offset="0" stop-color="#ffe6a6" stop-opacity="0.8"/><stop offset="1" stop-color="#ffe6a6" stop-opacity="0"/></radialGradient>`);
+    defs.push(`<radialGradient id="${uid}-halo"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.95"/><stop offset="0.35" stop-color="#ffd978" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd978" stop-opacity="0"/></radialGradient>`);
+    defs.push(`<radialGradient id="${uid}-pool"><stop offset="0" stop-color="#ffe6a6" stop-opacity="0.8"/><stop offset="1" stop-color="#ffe6a6" stop-opacity="0"/></radialGradient>`);
     body0 = `<rect x="0" y="0" width="${PREVIEW_VIEW_W}" height="${viewH.toFixed(0)}" rx="14" fill="url(#${gid})"/>`;
   }
 
@@ -311,7 +314,7 @@ function previewSvg(model) {
     const poolR = Math.min(1400, Math.max(700, Math.sqrt(W * D / Math.max(1, lightPts.length)) * 0.6));
     lightPts.forEach(([x, y]) => {
       const c = pt(x, y, 0);
-      body += `<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="${(poolR * 1.22 * s).toFixed(1)}" ry="${(poolR * 0.71 * s).toFixed(1)}" fill="url(#pv-pool)"/>`;
+      body += `<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="${(poolR * 1.22 * s).toFixed(1)}" ry="${(poolR * 0.71 * s).toFixed(1)}" fill="url(#${uid}-pool)"/>`;
     });
     if (roof.lineLight) {
       [0.33, 0.67].forEach((t) => body += line(pt(W * t, 120, 0), pt(W * t, D - 120, 0), `stroke="#ffe6a6" stroke-width="${(520 * s).toFixed(1)}" opacity="0.45" stroke-linecap="round"`));
@@ -369,7 +372,7 @@ function previewSvg(model) {
   }
   lightPts.forEach(([x, y]) => {
     const c = pt(x, y, H);
-    lateLights.push(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="13" fill="url(#pv-halo)"/>`);
+    lateLights.push(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="13" fill="url(#${uid}-halo)"/>`);
     lateLights.push(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="4" fill="#fff6d2" stroke="#d9a63a" stroke-width="1"/>`);
     // 빛 기둥 (지붕 → 바닥)
     const f = pt(x, y, 0);
@@ -498,10 +501,9 @@ function renderStructurePreview(container, model) {
   }
   container.hidden = false;
   const legend = (model.legend || []).filter(Boolean);
-  const svg = previewSvg(model);
-  renderPreviewDock(container, model, svg, legend);
+  renderPreviewDock(container, model, previewSvg(model), legend);
   container.innerHTML = `
-    <div class="porch-preview__drawing">${svg}</div>
+    <div class="porch-preview__drawing">${previewSvg(model)}</div>
     ${model.photo ? `
       <figure class="porch-preview__photo">
         <img src="${previewEscape(model.photo)}" alt="">
