@@ -428,6 +428,193 @@ function previewSvg(model) {
   return `<svg viewBox="0 0 ${PREVIEW_VIEW_W} ${viewH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="구성 미리보기 도면"><defs>${defs.join("")}</defs>${body}</svg>`;
 }
 
+
+/*
+  휀스 입면 도면 (센시아 휀스 / 센시아 휀스R). model.kind === "fence"
+  { seriesName, designLabel, pattern, panelHex, frameHex, panelSwatch, tiers:[mm…](아래→위), totalHeightMm,
+    spans, lastW, cut, lengthMm, poles, pitch1000, postSize, corners, lowerCover, highStrength, summary, photo, photoCaption, legend }
+*/
+function fenceSvg(model) {
+  const uid = `pf${++previewSvgSeq}`;
+  const VW = PREVIEW_VIEW_W;
+  const defs = [];
+  const tiers = model.tiers.slice();
+  const spans = Math.max(1, model.spans);
+  const lastW = model.cut ? model.lastW : 2000;
+  // 스팬이 많으면 앞 5칸 + 생략 표시 + 뒤 2칸만 그린다
+  const MAX_DRAW = 7;
+  const compact = spans > MAX_DRAW;
+  const segments = []; // { w: mm, index, cut }
+  if (compact) {
+    for (let i = 0; i < 5; i += 1) segments.push({ w: 2000, index: i });
+    segments.push({ gap: true, w: 700 });
+    segments.push({ w: 2000, index: spans - 2 });
+    segments.push({ w: lastW, index: spans - 1, cut: model.cut });
+  } else {
+    for (let i = 0; i < spans; i += 1) segments.push({ w: i === spans - 1 ? lastW : 2000, index: i, cut: i === spans - 1 && model.cut });
+  }
+  const drawnLen = segments.reduce((sum, seg) => sum + seg.w, 0);
+  const Htot = model.totalHeightMm;
+  const marginL = 76;
+  const marginR = 96;
+  const s = Math.min((VW - marginL - marginR) / drawnLen, 180 / Htot);
+  const groundY = 46 + Htot * s + 6;
+  const viewH = Math.max(230, groundY + 62);
+  const x0 = marginL + ((VW - marginL - marginR) - drawnLen * s) / 2;
+  const X = (mm) => x0 + mm * s;
+  const Y = (mmAboveGround) => groundY - mmAboveGround * s;
+  const rect = (x, y, w, h, attrs) => `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.4, w).toFixed(1)}" height="${Math.max(0.4, h).toFixed(1)}" ${attrs}/>`;
+  const line = (x1, y1, x2, y2, attrs) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" ${attrs}/>`;
+  const text = (x, y, str, attrs) => `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" ${attrs}>${previewEscape(str)}</text>`;
+  const lighten = (hex, amount) => {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = (v) => Math.min(255, Math.round(v + (255 - v) * amount));
+    return `#${[ch(n >> 16), ch((n >> 8) & 255), ch(n & 255)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+  };
+  let panelFill = model.panelHex;
+  if (model.panelSwatch) {
+    defs.push(`<pattern id="${uid}-wood" patternUnits="userSpaceOnUse" width="40" height="40"><image href="${previewEscape(model.panelSwatch)}" width="40" height="40" preserveAspectRatio="xMidYMid slice"/></pattern>`);
+    panelFill = `url(#${uid}-wood)`;
+  }
+  const slatShade = model.panelSwatch ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.22)";
+  const bg = "#f4f1ea";
+  let body = "";
+
+  // 하늘/바닥
+  body += rect(0, 0, VW, viewH, `fill="none"`);
+  body += rect(0, groundY, VW, viewH - groundY, `fill="#e3ddd1"`);
+  body += line(0, groundY, VW, groundY, `stroke="#9a948a" stroke-width="1"`);
+
+  // 패널 1장 그리기 (x, w: px, bottomMm, hMm)
+  const RAIL = 40;
+  const drawPanel = (xPx, wPx, bottomMm, hMm, isCut) => {
+    const top = Y(bottomMm + hMm);
+    const hPx = hMm * s;
+    let out = "";
+    // 프레임(상하 가로대 + 세로틀)
+    out += rect(xPx, top, wPx, hPx, `fill="${bg}" stroke="${model.frameHex}" stroke-width="1"`);
+    const innerTop = top + RAIL * s;
+    const innerH = (hMm - RAIL * 2) * s;
+    const clipId = `${uid}-c${Math.round(xPx)}-${Math.round(top)}`;
+    defs.push(`<clipPath id="${clipId}"><rect x="${xPx.toFixed(1)}" y="${innerTop.toFixed(1)}" width="${wPx.toFixed(1)}" height="${innerH.toFixed(1)}"/></clipPath>`);
+    let pat = "";
+    const p = model.pattern;
+    if (p === "hpanel" || p === "louver" || p === "combi" || p === "hslim") {
+      const pitch = p === "hslim" ? 32 : 100;
+      for (let mm = 0; mm < hMm - RAIL * 2 + pitch; mm += pitch) {
+        const yTop = innerTop + mm * s;
+        if (p === "hpanel") {
+          pat += rect(xPx, yTop, wPx, 85 * s, `fill="${panelFill}"`);
+        } else if (p === "louver") {
+          pat += rect(xPx, yTop, wPx, 100 * s, `fill="${panelFill}"`);
+          pat += rect(xPx, yTop + 72 * s, wPx, 28 * s, `fill="${slatShade}"`);
+        } else if (p === "combi") {
+          pat += rect(xPx, yTop, wPx, 57.9 * s, `fill="${panelFill}"`);
+          pat += rect(xPx, yTop + 68 * s, wPx, 21.7 * s, `fill="${panelFill}"`);
+        } else {
+          pat += rect(xPx, yTop, wPx, 21.7 * s, `fill="${panelFill}"`);
+        }
+      }
+    } else {
+      const pitch = p === "vslim" ? 29.9 : 60.6;
+      const bar = p === "vslim" ? 10 : 15;
+      for (let mm = 12; mm < wPx / s; mm += pitch) {
+        pat += rect(xPx + mm * s, innerTop, bar * s, innerH, `fill="${panelFill}"`);
+      }
+    }
+    out += `<g clip-path="url(#${clipId})">${pat}</g>`;
+    // 상하 가로대
+    out += rect(xPx, top, wPx, RAIL * s, `fill="${model.frameHex}"`);
+    out += rect(xPx, top + hPx - RAIL * s, wPx, RAIL * s, `fill="${model.frameHex}"`);
+    if (isCut) {
+      out += line(xPx + wPx - 1, top - 4, xPx + wPx - 1, top + hPx + 4, `stroke="#b03a2c" stroke-width="1.4" stroke-dasharray="4 3"`);
+    }
+    return out;
+  };
+
+  // 기둥
+  const postW = Math.max(3.5, model.postSize * s);
+  const capH = Math.max(2, 20 * s);
+  const drawPole = (xPx) => {
+    let out = "";
+    if (model.tiers.length > 1) {
+      // 독립 기초
+      out += rect(xPx - 14, groundY, 28, 14, `fill="#cfc8bb" stroke="#a9a296" stroke-width="0.8"`);
+    }
+    out += rect(xPx - postW / 2, Y(Htot) - capH, postW, Htot * s + capH, `fill="${model.frameHex}"`);
+    out += rect(xPx - postW / 2 - 1, Y(Htot) - capH - 2, postW + 2, 3, `fill="${lighten(model.frameHex, 0.25)}"`);
+    return out;
+  };
+
+  // 단 배치: 바닥에서 A=80mm 띄우고, 단 사이 12mm
+  const A = tiers[0] === 540 && tiers.length === 1 ? 60 : 80;
+  const tierBottoms = [];
+  let cursor = A;
+  tiers.forEach((h) => { tierBottoms.push(cursor); cursor += h + 12; });
+
+  let cx = 0; // mm cursor
+  let panels = "";
+  let polesOut = "";
+  let gapOut = "";
+  polesOut += drawPole(X(0));
+  segments.forEach((seg) => {
+    if (seg.gap) {
+      const gx = X(cx + seg.w / 2);
+      gapOut += text(gx, Y(Htot / 2), "⋯", `text-anchor="middle" font-size="22" fill="#7a746a"`);
+      gapOut += text(gx, Y(Htot / 2) + 16, `스팬 ${spans - 7}칸 생략`, `text-anchor="middle" font-size="9" fill="#7a746a"`);
+      cx += seg.w;
+      polesOut += drawPole(X(cx));
+      return;
+    }
+    const xPx = X(cx) + postW / 2 + 1;
+    const wPx = Math.max(2, seg.w * s - postW - 2);
+    tiers.forEach((h, i) => { panels += drawPanel(xPx, wPx, tierBottoms[i], h, seg.cut); });
+    if (model.lowerCover) panels += rect(X(cx) + postW / 2, Y(90), seg.w * s - postW, 90 * s, `fill="${lighten(model.frameHex, 0.15)}" stroke="${model.frameHex}" stroke-width="0.6"`);
+    // 고강도 중간 기둥 (심간 1,000)
+    if (model.pitch1000 && seg.w > 1000) polesOut += drawPole(X(cx + 1000));
+    cx += seg.w;
+    polesOut += drawPole(X(cx));
+  });
+  body += panels + polesOut + gapOut;
+
+  // 치수: 총 길이
+  const dimY = groundY + 30;
+  body += line(X(0), dimY, X(drawnLen), dimY, `stroke="#8a8f8c" stroke-width="0.8" stroke-dasharray="3 2"`);
+  body += line(X(0), dimY - 5, X(0), dimY + 5, `stroke="#8a8f8c" stroke-width="0.8"`);
+  body += line(X(drawnLen), dimY - 5, X(drawnLen), dimY + 5, `stroke="#8a8f8c" stroke-width="0.8"`);
+  body += text(X(drawnLen / 2), dimY + 14, `총 길이 ${previewNumber(model.lengthMm)}`, `text-anchor="middle" font-size="11" font-weight="600" fill="#3f4542"`);
+  body += text(X(drawnLen / 2), dimY + 26, `2,000 스팬 × ${model.cut ? spans - 1 : spans}${model.cut ? ` + 절단 ${previewNumber(model.lastW)}` : ""} · 기둥 ${model.poles}본${model.pitch1000 ? " (심간 1,000)" : ""}`, `text-anchor="middle" font-size="9" fill="#5f594f"`);
+  // 치수: 전고 + 단별 패널 높이
+  const hx = X(drawnLen) + 22;
+  body += line(hx, Y(Htot), hx, groundY, `stroke="#8a8f8c" stroke-width="0.8" stroke-dasharray="3 2"`);
+  body += text(hx + 6, Y(Htot / 2) + 4, `전고 ${previewNumber(Htot)}`, `text-anchor="start" font-size="11" font-weight="600" fill="#3f4542"`);
+  tiers.forEach((h, i) => {
+    const yMid = Y(tierBottoms[i] + h / 2);
+    body += text(X(0) - 10, yMid + 3, `${tiers.length > 1 ? `${i + 1}단 ` : "패널 "}${previewNumber(h)}`, `text-anchor="end" font-size="9.5" fill="#5f594f"`);
+  });
+  if (model.cut) {
+    const cutSeg = segments[segments.length - 1];
+    const cxEnd = drawnLen;
+    body += text(X(cxEnd - cutSeg.w / 2), groundY - 5, `절단 ${previewNumber(model.lastW)}`, `text-anchor="middle" font-size="9" font-weight="700" fill="#b03a2c"`);
+  }
+  // 상단 태그
+  const tag = (x, y, str, anchor = "middle") => {
+    const w = str.length * 9.8 + 16;
+    const tx = anchor === "middle" ? x - w / 2 : anchor === "end" ? x - w : x;
+    return `<rect x="${tx.toFixed(1)}" y="${(y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="9" fill="rgba(255,255,255,0.94)" stroke="${model.frameHex}" stroke-width="1.2"/>` + text(tx + w / 2, y + 4, str, `text-anchor="middle" font-size="10" font-weight="700" fill="#2f2a24"`);
+  };
+  body += tag(VW / 2, 18, `${model.seriesName} · ${model.designLabel}${model.tiers.length > 1 ? ` · ${model.tiers.length}단` : ""}`);
+  const extras = [model.highStrength ? "고강도 42m/s" : "", model.corners ? `코너 ${model.corners}곳` : "", model.lowerCover ? "하부 커버" : ""].filter(Boolean);
+  if (extras.length) body += tag(VW / 2, 40, extras.join(" · "));
+
+  return `<svg viewBox="0 0 ${VW} ${viewH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="휀스 입면 미리보기"><defs>${defs.join("")}</defs>${body}</svg>`;
+}
+
+// 모델 종류에 따라 도면 생성기를 고른다 (포치·루프 등각 / 휀스 입면)
+function previewSvgFor(model) {
+  return model && model.kind === "fence" ? fenceSvg(model) : previewSvg(model);
+}
+
 /*
   모바일(한 열 레이아웃)에서는 결과 패널이 폼 아래로 내려가 도면이 안 보이므로,
   각 구성 패널 맨 위에 붙는 접이식 독(.porch-dock)에도 같은 도면을 그린다. 열림/닫힘은 기억한다.
@@ -480,7 +667,7 @@ function renderPreviewDock(container, model, svg, legend) {
   const summary = dock.querySelector(".porch-dock__summary");
   if (summary) {
     const optionCount = Math.max(0, legend.length - 1);
-    summary.textContent = `${previewNumber(model.widthMm)} × ${previewNumber(model.depthMm)} × 높이 ${previewNumber(model.heightMm)}mm${optionCount ? ` · 옵션 ${optionCount}` : ""}`;
+    summary.textContent = model.summary || `${previewNumber(model.widthMm)} × ${previewNumber(model.depthMm)} × 높이 ${previewNumber(model.heightMm)}mm${optionCount ? ` · 옵션 ${optionCount}` : ""}`;
   }
   const body = dock.querySelector(".porch-dock__body");
   if (body) {
@@ -501,9 +688,9 @@ function renderStructurePreview(container, model) {
   }
   container.hidden = false;
   const legend = (model.legend || []).filter(Boolean);
-  renderPreviewDock(container, model, previewSvg(model), legend);
+  renderPreviewDock(container, model, previewSvgFor(model), legend);
   container.innerHTML = `
-    <div class="porch-preview__drawing">${previewSvg(model)}</div>
+    <div class="porch-preview__drawing">${previewSvgFor(model)}</div>
     ${model.photo ? `
       <figure class="porch-preview__photo">
         <img src="${previewEscape(model.photo)}" alt="">
