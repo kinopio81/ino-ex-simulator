@@ -32,8 +32,6 @@
   { category: "가든 액세사리 / (벤치형)", name: "연속형 벤치", spec: "1090x500x520", packUnit: "각 1EA씩", unit: "EA", leadTime: "약 2개월", supplier: "-", options: [{ label: "기본", price: 2000000 }] },
   { category: "가든 액세사리 / (내, 외장재)", name: "에버아트 보드 / EVERART BOARD", spec: "910x2440", packUnit: "1장", unit: "m2", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 336000 }] },
   { category: "가든 액세사리 / (내, 외장재, 독립재)", name: "에버아트 우드 / EVERART WOOD", spec: "75x75x1800 / 각재", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 138000 }] },
-  { category: "가든 액세사리 / (가든 휀스)", name: "센시아 휀스 / 세로 가는 격자", spec: "600x2000", packUnit: "1EA", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "기본", price: 270000 }] },
-  { category: "가든 액세사리 / (가든 휀스)", name: "센시아 휀스 / 가로 격자", spec: "600x2000", packUnit: "1EA", unit: "EA", leadTime: "-", supplier: "-", options: [{ label: "기본", price: 216000 }] },
   { category: "이노블록 월", name: "노보월S", spec: "500x250x150", packUnit: "-", unit: "EA", leadTime: "약 1개월", supplier: "자체생산", options: [{ label: "기본", price: 25000 }] },
   { category: "이노블록 월", name: "스테가월", spec: "394x250xH98 / 다각형 구조 / 1m2 = 13ea", packUnit: "-", unit: "EA", leadTime: "약 6개월", supplier: "고델만 / (독일)", options: [{ label: "기본", price: 25000 }] },
   { category: "익스테리어 상품 / (LED조명)", name: "월라이트", spec: "100x50x43 / 12V·24V / 1.8W", packUnit: "1EA", unit: "EA", leadTime: "약 1개월", supplier: "타카쇼 / (일본)", options: [{ label: "기본", price: 270000 }] },
@@ -238,16 +236,6 @@ const fixedInstallRules = {
     methods: [{ id: "wood_install", label: "우드 시공", rate: 15000, unitLabel: "m당 시공비" }],
     note: "에버아트 우드는 간격에 따라 m당 자재비와 m당 시공비 기준으로 계산됩니다."
   },
-  "센시아 휀스 / 세로 가는 격자": {
-    kind: "length",
-    methods: [{ id: "sensia_fence_install", label: "휀스 시공", rate: 100000, unitLabel: "m당 시공비" }],
-    note: "센시아 휀스는 입력 길이를 기준으로 자재 수량과 m당 시공비를 계산합니다."
-  },
-  "센시아 휀스 / 가로 격자": {
-    kind: "length",
-    methods: [{ id: "sensia_fence_install", label: "휀스 시공", rate: 100000, unitLabel: "m당 시공비" }],
-    note: "센시아 휀스는 입력 길이를 기준으로 자재 수량과 m당 시공비를 계산합니다."
-  }
 };
 
 const excludedInstallNames = new Set([
