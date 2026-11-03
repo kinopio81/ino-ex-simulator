@@ -480,9 +480,23 @@ function fenceSvg(model) {
   const bg = "#f4f1ea";
   let body = "";
 
-  // 하늘/바닥
+  // 하늘/바닥 (설치 방식에 따라 담장·기초·콘크리트 바닥)
+  const mountKind = model.mount || (model.tiers.length > 1 ? "foundation" : "block");
   body += rect(0, 0, VW, viewH, `fill="none"`);
   body += rect(0, groundY, VW, viewH - groundY, `fill="#e3ddd1"`);
+  if (mountKind === "block") {
+    // 기존 담장: 블록 줄눈
+    const wallH = 26;
+    body += rect(x0 - 12, groundY, drawnLen * s + 24, wallH, `fill="#cfcac0" stroke="#a39d92" stroke-width="0.8"`);
+    for (let yy = groundY + wallH / 2; yy < groundY + wallH; yy += wallH / 2) body += line(x0 - 12, yy, x0 - 12 + drawnLen * s + 24, yy, `stroke="#a39d92" stroke-width="0.6"`);
+    for (let xx = x0 - 12; xx < x0 + drawnLen * s + 12; xx += 22) body += line(xx, groundY, xx, groundY + wallH / 2, `stroke="#a39d92" stroke-width="0.6"`) + line(xx + 11, groundY + wallH / 2, xx + 11, groundY + wallH, `stroke="#a39d92" stroke-width="0.6"`);
+    body += text(x0 - 16, groundY + 17, "기존 담장", `text-anchor="end" font-size="9" fill="#5f594f"`);
+  } else if (mountKind === "plate") {
+    body += rect(0, groundY, VW, 8, `fill="#d4d0c8"`);
+    body += text(x0 - 16, groundY + 7, "콘크리트 바닥", `text-anchor="end" font-size="9" fill="#5f594f"`);
+  } else {
+    body += text(x0 - 16, groundY + 12, "독립 기초", `text-anchor="end" font-size="9" fill="#5f594f"`);
+  }
   body += line(0, groundY, VW, groundY, `stroke="#9a948a" stroke-width="1"`);
 
   // 패널 1장 그리기 (x, w: px, bottomMm, hMm)
@@ -535,14 +549,23 @@ function fenceSvg(model) {
   // 기둥
   const postW = Math.max(3.5, model.postSize * s);
   const capH = Math.max(2, 20 * s);
+  const mount = model.mount || (model.tiers.length > 1 ? "foundation" : "block");
   const drawPole = (xPx) => {
     let out = "";
-    if (model.tiers.length > 1) {
-      // 독립 기초
+    if (mount === "foundation") {
+      // 독립 기초 (지면 아래 콘크리트)
       out += rect(xPx - 14, groundY, 28, 14, `fill="#cfc8bb" stroke="#a9a296" stroke-width="0.8"`);
+    } else if (mount === "block") {
+      // 기존 담장 속 앵커 (매설부)
+      out += rect(xPx - postW / 2 + 0.5, groundY, postW - 1, 10, `fill="${model.frameHex}" opacity="0.45"`);
     }
     out += rect(xPx - postW / 2, Y(Htot) - capH, postW, Htot * s + capH, `fill="${model.frameHex}"`);
     out += rect(xPx - postW / 2 - 1, Y(Htot) - capH - 2, postW + 2, 3, `fill="${lighten(model.frameHex, 0.25)}"`);
+    if (mount === "plate") {
+      // 베이스 플레이트 (원판) + 앵커 볼트
+      out += `<ellipse cx="${xPx.toFixed(1)}" cy="${groundY.toFixed(1)}" rx="10" ry="3" fill="#d9d6cf" stroke="#8d8a83" stroke-width="0.8"/>`;
+      out += `<circle cx="${(xPx - 6).toFixed(1)}" cy="${(groundY + 0.5).toFixed(1)}" r="1.1" fill="#6b6861"/><circle cx="${(xPx + 6).toFixed(1)}" cy="${(groundY + 0.5).toFixed(1)}" r="1.1" fill="#6b6861"/>`;
+    }
     return out;
   };
 
@@ -604,7 +627,8 @@ function fenceSvg(model) {
     return `<rect x="${tx.toFixed(1)}" y="${(y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="9" fill="rgba(255,255,255,0.94)" stroke="${model.frameHex}" stroke-width="1.2"/>` + text(tx + w / 2, y + 4, str, `text-anchor="middle" font-size="10" font-weight="700" fill="#2f2a24"`);
   };
   body += tag(VW / 2, 18, `${model.seriesName} · ${model.designLabel}${model.tiers.length > 1 ? ` · ${model.tiers.length}단` : ""}`);
-  const extras = [model.highStrength ? "고강도 42m/s" : "", model.corners ? `코너 ${model.corners}곳` : "", model.lowerCover ? "하부 커버" : ""].filter(Boolean);
+  const mountLabel = { block: "담장 위 매설", foundation: "기초 콘크리트 매설", plate: "베이스 플레이트 앵커" }[mountKind] || "";
+  const extras = [mountLabel, model.highStrength ? "고강도 42m/s" : "", model.corners ? `코너 ${model.corners}곳` : "", model.lowerCover ? "하부 커버" : ""].filter(Boolean);
   if (extras.length) body += tag(VW / 2, 40, extras.join(" · "));
 
   return `<svg viewBox="0 0 ${VW} ${viewH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="휀스 입면 미리보기"><defs>${defs.join("")}</defs>${body}</svg>`;

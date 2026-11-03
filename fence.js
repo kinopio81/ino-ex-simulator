@@ -88,9 +88,17 @@ const FENCE_MULTI = {
   ]
 };
 
+// 설치 방식. 단단(35각 프리폴)은 셋 중 선택, 다단(60·75각)은 독립 기초만 가능.
+const FENCE_MOUNTS = [
+  { id: "block", label: "기존 담장 위 신설 · 프리폴 앵커를 블록에 매설", short: "담장 위 매설" },
+  { id: "foundation", label: "기초 콘크리트 신설 · 독립 기초에 매설", short: "기초 콘크리트 매설" },
+  { id: "plate", label: "베이스 플레이트 앵커 고정 · 콘크리트 바닥면 (국내 개량형)", short: "베이스 플레이트 앵커" }
+];
+const FENCE_BASE_PLATE_PER_M = 100000; // 베이스 플레이트(부자재 20,000) + 설치 인건비 70,000 + 경비 10,000 = 1m당 합계
+
 const FENCE_WIND = [
-  { id: "std", label: "표준 납마리 (풍속 34m/s 상당 · 기둥 심간 2,000)" },
-  { id: "high", label: "고강도 납마리 (풍속 42m/s 상당)" }
+  { id: "std", label: "표준 사양 (풍속 34m/s 상당 · 기둥 심간 2,000)" },
+  { id: "high", label: "고강도 사양 (풍속 42m/s 상당)" }
 ];
 
 const FENCE_SERIES = {
@@ -163,6 +171,10 @@ function createFenceConfigurator(cfg) {
   const fenCornersInput = el("Corners");
   const fenCornerTypeSelect = el("CornerType");
   const fenWindSelect = el("Wind");
+  const fenMountSelect = el("Mount");
+  const fenBaseRateInput = el("BaseRate");
+  const fenBaseRateField = el("BaseRateField");
+  const fenInstallRateField = el("InstallRateField");
   const fenLowerCoverToggle = el("LowerCover");
   const fenEndCoverToggle = el("EndCover");
   const fenGrooveCoverToggle = el("GrooveCover");
@@ -212,11 +224,31 @@ function createFenceConfigurator(cfg) {
     fenHeightSelect.innerHTML = html;
     if (Array.from(fenHeightSelect.options).some((o) => o.value === previous)) fenHeightSelect.value = previous;
     if (fenGrooveCoverLabel) fenGrooveCoverLabel.hidden = tiers === 1;
+    // 다단 프리폴은 블록 위·베이스 플레이트 시공 불가 → 독립 기초로 고정
+    if (tiers > 1) {
+      fenMountSelect.value = "foundation";
+      fenMountSelect.disabled = true;
+    } else {
+      fenMountSelect.disabled = false;
+    }
+    syncMountUi();
     if (fenHint) {
       fenHint.textContent = tiers === 1
         ? "휀스 1장 W1998 × 패널 높이. 기둥은 35각 프리폴, 블록 위 시공 가능"
         : `${tiers}단 프리폴(${tiers === 2 ? "H12~H20은 60각, H22 이상 75각" : "75각"})에 패널 ${tiers}장을 상하로 조합. 블록 위 시공 불가, 독립 기초 필수 (P.744~745)`;
     }
+  }
+
+  function currentMount() {
+    return FENCE_MOUNTS.find((item) => item.id === fenMountSelect.value) || FENCE_MOUNTS[0];
+  }
+
+  function syncMountUi() {
+    const plate = currentMount().id === "plate";
+    if (fenBaseRateField) fenBaseRateField.hidden = !plate;
+    if (fenInstallRateField) fenInstallRateField.hidden = plate;
+    const installLabel = fenInstallKrw.previousElementSibling;
+    if (installLabel) installLabel.textContent = plate ? "베이스 플레이트 + 시공비" : "시공비";
   }
 
   function pickHeight() {
@@ -258,7 +290,9 @@ function createFenceConfigurator(cfg) {
     const corners = Math.max(0, Math.round(porchReadNumber(fenCornersInput, 0)));
     const cornerType = FENCE_CORNER_TYPES.find((item) => item.id === fenCornerTypeSelect.value) || FENCE_CORNER_TYPES[0];
     const wind = fenWindSelect.value === "high" ? "high" : "std";
+    const mount = currentMount();
     const installRate = fenInstallToggle.checked ? porchReadNumber(fenInstallRateInput, FENCE_DEFAULT_INSTALL_PER_SPAN) : 0;
+    const baseRate = fenInstallToggle.checked ? porchReadNumber(fenBaseRateInput, FENCE_BASE_PLATE_PER_M) : 0;
 
     const warnings = [];
     const lines = [];
@@ -327,10 +361,15 @@ function createFenceConfigurator(cfg) {
     if (height.tiers === 1) {
       const h = height.panels[0];
       const unit = hsPoleType ? FENCE_PARTS.hsPole[h.key] : FENCE_PARTS.pole[h.key];
+      const mountNote = mount.id === "block"
+        ? "기존 담장(중량 블록 JIS C종 이상) 위에 앵커 매설"
+        : mount.id === "foundation"
+          ? "신설 기초 콘크리트에 앵커 매설 (기초는 현장 시공)"
+          : "프리폴 속에 스테인리스 베이스 플레이트를 끼워 콘크리트 바닥면에 앵커 고정";
       push({
         group: "기둥",
         label: `${hsPoleType ? "고강도 " : ""}프리폴 35각 ${h.key} (L${h.poleL}) × ${poles}본`,
-        detail: `${pitch1000 ? "H12는 고강도 프리폴이 없어 표준 프리폴을 기둥 심간 1,000 이내로 배치" : hsPoleType ? "풍속 42m/s 상당 고강도 납마리" : "풍속 34m/s 상당, 기둥 심간 2,000 이내"} · 상·하부 금구, 기둥 캡, 조인트 슬리브 2개 포함 (P.735)`,
+        detail: `${pitch1000 ? "H12는 고강도 프리폴이 없어 표준 프리폴을 기둥 심간 1,000 이내로 배치" : hsPoleType ? "풍속 42m/s 상당 고강도 사양" : "풍속 34m/s 상당, 기둥 심간 2,000 이내"} · ${mountNote} · 상·하부 금구, 기둥 캡, 조인트 슬리브 2개 포함 (P.735)`,
         krw: jpyToKrw(unit * poles),
         image: FENCE_IMG + "free-pole.jpg",
         remove: wind === "high" ? () => porchResetControl(fenWindSelect, "std") : null
@@ -340,7 +379,7 @@ function createFenceConfigurator(cfg) {
       push({
         group: "기둥",
         label: `${height.tiers}단 프리폴 ${combo.post}각 ${combo.key} × ${poles}본`,
-        detail: `${pitch1000 ? "기둥 심간 1,000 이내 고강도 납마리(풍속 42m/s)" : "기둥 심간 2,000 이내 (풍속 34m/s)"} · 독립 기초 ${combo.found} (P.739, P.744~745)`,
+        detail: `${pitch1000 ? "기둥 심간 1,000 이내 고강도 사양(풍속 42m/s)" : "기둥 심간 2,000 이내 (풍속 34m/s)"} · 신설 기초 콘크리트에 매설, 독립 기초 ${combo.found} (P.739, P.744~745)`,
         krw: jpyToKrw(combo.jpy * poles),
         image: FENCE_IMG + "multi-pole.jpg",
         remove: wind === "high" ? () => porchResetControl(fenWindSelect, "std") : null
@@ -407,9 +446,17 @@ function createFenceConfigurator(cfg) {
     fenReadCustomOptions().forEach((item) => push({ group: "옵션", label: item.label, detail: "수동 입력 옵션", krw: item.krw, remove: () => porchClearCustomOption(item.row) }));
 
     const materialKrw = lines.reduce((sum, line) => sum + (line.separate ? 0 : line.krw), 0);
-    const installFee = Math.round(installRate * spans);
+    const meters = lengthMm / 1000;
+    const installFee = mount.id === "plate"
+      ? Math.round(baseRate * meters / 100) * 100
+      : Math.round(installRate * spans);
+    const installLabel = installFee <= 0
+      ? "미반영"
+      : mount.id === "plate"
+        ? `베이스 플레이트 + 앵커 시공 ${formatCurrency(baseRate)}/m × ${meters.toFixed(2)}m · ${formatCurrency(installFee)}`
+        : `시공비 (${mount.short}, 스팬 ${spans} × ${formatCurrency(installRate)}) · ${formatCurrency(installFee)}`;
     return {
-      valid: true, warnings, lines, design, assets, color, panelColor, frameColor, height, lengthMm, corners, cornerType, wind, pitch1000, hsPoleType,
+      valid: true, warnings, lines, design, assets, color, panelColor, frameColor, height, lengthMm, corners, cornerType, wind, pitch1000, hsPoleType, mount, installLabel, meters,
       spans, lastW, cut, fullPanels, poles, sizeLabel, topKey, materialKrw, installFee, total: materialKrw + installFee
     };
   }
@@ -423,7 +470,8 @@ function createFenceConfigurator(cfg) {
       series.colorMode === "single" ? `색상 ${result.color.label}` : `패널 ${result.panelColor.label.replace(/ \(.*\)$/, "")} · 프레임 ${result.frameColor.label}`,
       height.tiers > 1 ? `${height.tiers}단 ${height.combo.key} (${height.combo.tiers.map((mm) => formatNumber(mm)).join("+")})` : `${height.panels[0].key} 단단`,
       `스팬 ${result.spans}${result.cut ? ` (마지막 ${formatNumber(result.lastW)} 절단)` : ""} · 기둥 ${result.poles}본`,
-      result.wind === "high" ? "고강도 납마리 42m/s" : "",
+      result.mount.short,
+      result.wind === "high" ? "고강도 사양 42m/s" : "",
       result.corners ? `코너 ${result.corners}곳 · ${result.cornerType.short}` : "",
       fenLowerCoverToggle.checked ? "하부 막음 커버" : "",
       fenGrooveCoverToggle && fenGrooveCoverToggle.checked && height.tiers > 1 ? "다단 홈 커버" : ""
@@ -446,6 +494,7 @@ function createFenceConfigurator(cfg) {
       pitch1000: result.pitch1000,
       postSize: height.tiers > 1 ? height.combo.post : 35,
       corners: result.corners,
+      mount: result.mount.id,
       lowerCover: fenLowerCoverToggle.checked,
       highStrength: result.wind === "high",
       summary: `총 길이 ${formatNumber(result.lengthMm)} × 전고 ${formatNumber(height.totalMm)}mm · 스팬 ${result.spans}`,
@@ -461,7 +510,9 @@ function createFenceConfigurator(cfg) {
       + mediaMarkup(result.assets.draw, `${result.design.label} 패널 구성도 (W1998, 패널 피치 100)`);
     fenPoleMedia.innerHTML = result.height.tiers > 1
       ? mediaMarkup(FENCE_IMG + "multi-pole.jpg", `${result.height.tiers}단 프리폴 · 독립 기초 시공`)
-      : mediaMarkup(FENCE_IMG + "free-pole.jpg", "프리폴 35각 · 블록 위 시공 가능");
+      : result.mount.id === "plate"
+        ? mediaMarkup(FENCE_IMG + "base-plate.jpg", "베이스 플레이트 (스테인리스) · 프리폴에 끼워 바닥 앵커 고정") + mediaMarkup(FENCE_IMG + "base-plate-side.jpg", "베이스 플레이트 측면 · 1m당 100,000원 (부자재 + 설치 인건비 + 경비)")
+        : mediaMarkup(FENCE_IMG + "free-pole.jpg", result.mount.id === "block" ? "프리폴 35각 · 기존 담장 위 앵커 매설" : "프리폴 35각 · 신설 기초 콘크리트에 매설");
     fenOptionMedia.innerHTML = fenLowerCoverToggle.checked ? mediaMarkup(FENCE_IMG + "lower-cover.jpg", "하부 막음 커버 (틈새 55~85mm)") : "";
   }
 
@@ -481,7 +532,7 @@ function createFenceConfigurator(cfg) {
       fenAddButton.disabled = true;
       return;
     }
-    fenSpecSummary.textContent = `${result.design.label} · ${result.height.label} · ${result.sizeLabel} · 기둥 ${result.poles}본${result.corners ? ` · 코너 ${result.corners}` : ""}`;
+    fenSpecSummary.textContent = `${result.design.label} · ${result.height.label} · ${result.sizeLabel} · 기둥 ${result.poles}본 (${result.mount.short})${result.corners ? ` · 코너 ${result.corners}` : ""}`;
     fenLastLines = result.lines;
     fenBreakdown.innerHTML = porchBreakdownRows(result.lines);
     fenTotalKrw.textContent = formatCurrency(result.materialKrw);
@@ -505,6 +556,8 @@ function createFenceConfigurator(cfg) {
     fenTiersSelect.innerHTML = option(1, "단단 (패널 1장, H06~H12)") + option(2, "2단 (패널 2장 상하 조합, 전고 ~3.1m)") + option(3, "3단 (패널 3장, 전고 ~3.7m)");
     fenCornerTypeSelect.innerHTML = FENCE_CORNER_TYPES.map((item) => option(item.id, item.label)).join("");
     fenWindSelect.innerHTML = FENCE_WIND.map((item) => option(item.id, item.label)).join("");
+    fenMountSelect.innerHTML = FENCE_MOUNTS.map((item) => option(item.id, item.label)).join("");
+    fenBaseRateInput.value = String(FENCE_BASE_PLATE_PER_M);
     fenCustomOptions.innerHTML = Array.from({ length: PORCH_CUSTOM_OPTION_COUNT }, (_, index) => `
       <div class="porch-option-row" data-porch-option>
         <input type="text" placeholder="옵션 ${index + 1} 명칭" data-porch-option-label>
@@ -517,6 +570,7 @@ function createFenceConfigurator(cfg) {
   }
 
   fenTiersSelect.addEventListener("change", buildHeightOptions);
+  fenMountSelect.addEventListener("change", syncMountUi);
   fenDesignSelect.addEventListener("change", buildHeightOptions);
   fenForm.addEventListener("input", renderFence);
   fenForm.addEventListener("change", renderFence);
@@ -529,7 +583,8 @@ function createFenceConfigurator(cfg) {
       `${result.design.label} · ${result.height.label}`,
       `총 길이 ${formatNumber(result.lengthMm)}mm (스팬 ${result.spans}${result.cut ? `, 절단 ${formatNumber(result.lastW)}` : ""})`,
       series.colorMode === "single" ? result.color.label : `패널 ${result.panelColor.label.replace(/ \(.*\)$/, "")} / 프레임 ${result.frameColor.label}`,
-      result.wind === "high" ? "고강도 납마리" : "",
+      result.mount.short,
+      result.wind === "high" ? "고강도 사양" : "",
       result.corners ? `코너 ${result.corners} (${result.cornerType.short})` : ""
     ].filter(Boolean);
     quoteItems.push({
@@ -538,7 +593,7 @@ function createFenceConfigurator(cfg) {
       spec: specParts.join(" / "),
       image: result.assets.photo,
       materialLabel: `휀스 구성 · ${formatCurrency(result.materialKrw)}`,
-      installLabel: result.installFee > 0 ? `시공비 (스팬 ${result.spans}) · ${formatCurrency(result.installFee)}` : "미반영",
+      installLabel: result.installLabel,
       quantity: 1,
       quantityUnit: "식",
       materialAmount: result.materialKrw,

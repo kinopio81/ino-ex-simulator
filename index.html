@@ -803,6 +803,10 @@
                     <span>내풍압 사양</span>
                     <select id="sfaWind"></select>
                   </label>
+                  <label class="field">
+                    <span>설치 방식</span>
+                    <select id="sfaMount"></select>
+                  </label>
                 </div>
                 <p class="porch-hint" id="sfaHeightHint"></p>
                 <div class="porch-media-row" id="sfaPoleMedia"></div>
@@ -830,9 +834,13 @@
                 </div>
                 <div class="porch-media-row" id="sfaOptionMedia"></div>
                 <div class="form-grid porch-form__grid porch-form__grid--tight">
-                  <label class="field">
+                  <label class="field" id="sfaInstallRateField">
                     <span>시공비 · 2m 스팬당 (원, 가정값)</span>
                     <input id="sfaInstallRate" type="text" inputmode="numeric">
+                  </label>
+                  <label class="field" id="sfaBaseRateField" hidden>
+                    <span>베이스 플레이트 + 앵커 시공 · 1m당 (원)</span>
+                    <input id="sfaBaseRate" type="text" inputmode="numeric">
                   </label>
                 </div>
                 <div class="porch-custom">
@@ -923,6 +931,10 @@
                     <span>내풍압 사양</span>
                     <select id="sfrWind"></select>
                   </label>
+                  <label class="field">
+                    <span>설치 방식</span>
+                    <select id="sfrMount"></select>
+                  </label>
                 </div>
                 <p class="porch-hint" id="sfrHeightHint"></p>
                 <div class="porch-media-row" id="sfrPoleMedia"></div>
@@ -950,9 +962,13 @@
                 </div>
                 <div class="porch-media-row" id="sfrOptionMedia"></div>
                 <div class="form-grid porch-form__grid porch-form__grid--tight">
-                  <label class="field">
+                  <label class="field" id="sfrInstallRateField">
                     <span>시공비 · 2m 스팬당 (원, 가정값)</span>
                     <input id="sfrInstallRate" type="text" inputmode="numeric">
+                  </label>
+                  <label class="field" id="sfrBaseRateField" hidden>
+                    <span>베이스 플레이트 + 앵커 시공 · 1m당 (원)</span>
+                    <input id="sfrBaseRate" type="text" inputmode="numeric">
                   </label>
                 </div>
                 <div class="porch-custom">
