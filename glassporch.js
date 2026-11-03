@@ -1137,6 +1137,28 @@ function moveSwatchPreview(event) {
   preview.style.left = `${Math.min(event.clientX + offset, maxX)}px`;
   preview.style.top = `${Math.min(Math.max(event.clientY - preview.offsetHeight / 2, 12), maxY)}px`;
 }
+/*
+  data-hover-image 가 붙은 요소(토글 라벨 등) 위에 커서를 올리면 스와치 피커와 같은 사진 미리보기를 띄운다.
+  data-hover-label 은 사진 아래 설명.
+*/
+function bindHoverPreviews(root = document) {
+  root.querySelectorAll("[data-hover-image]").forEach((node) => {
+    if (node.dataset.hoverBound) return;
+    node.dataset.hoverBound = "1";
+    node.addEventListener("mouseenter", (event) => {
+      const preview = getSwatchPreview();
+      preview.querySelector("img").src = node.dataset.hoverImage;
+      preview.querySelector("span").textContent = node.dataset.hoverLabel || "";
+      preview.hidden = false;
+      moveSwatchPreview(event);
+    });
+    node.addEventListener("mousemove", (event) => {
+      if (!getSwatchPreview().hidden) moveSwatchPreview(event);
+    });
+    node.addEventListener("mouseleave", () => { getSwatchPreview().hidden = true; });
+  });
+}
+
 function createSwatchPicker(selectEl, options) {
   selectEl.hidden = true;
   selectEl.classList.add("swatch-picker__native");

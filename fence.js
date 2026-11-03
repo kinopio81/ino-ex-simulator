@@ -10,7 +10,7 @@
   단가는 모두 엔화 × 10 = 원화. 조립·시공비 불포함 가격이라 시공비는 스팬당 단가(가정값)를 별도로 더한다.
   산출 규칙 (카탈로그 P.743 "フリーポール使用時の必要部材" 기준)
     · 휀스 1장 = W1998 (기둥 심간 2,000). 총 길이 ÷ 2,000 → 스팬 수, 나머지는 마지막 1장을 절단(컷 가공비 + 단부 커버).
-    · 프리폴 = 스팬 + 1본. 고강도 납마리(풍속 42m/s)는 H06~H10 전용 고강도 프리폴, H12·다단은 표준 프리폴을 기둥 심간 1,000 이내로.
+    · 프리폴 = 스팬 + 1본. 고강도 사양(풍속 42m/s)은 H06~H10 전용 고강도 프리폴, H12·다단은 표준 프리폴을 기둥 심간 1,000 이내로.
     · 다단(2단·3단)은 다단 프리폴 1본당 상하부 고정금구 1세트 + 중간 고정금구 (단수−1)세트, 독립 기초 필수.
     · 코너는 코너 부품(3종 택1)을 코너 × 단수만큼. 엔드캡(4개 세트)은 1세트.
     · 하부 막음 커버(옵션)는 스팬당 1본 + 코너당 코너용 1본.
@@ -51,9 +51,9 @@ const FENCE_PARTS = {
 };
 
 const FENCE_CORNER_TYPES = [
-  { id: "joint", label: "코너 연결부품 (2개 세트, 60°~300° 가동)", short: "코너 연결부품" },
-  { id: "lattice", label: "격자부 코너 부품 (코너 틈새를 격자로 마감)", short: "격자부 코너" },
-  { id: "privacy", label: "가림 코너 부품 (코너 틈새를 완전히 가림)", short: "가림 코너" }
+  { id: "joint", label: "코너 연결부품 (2개 세트, 60°~300° 가동)", short: "코너 연결부품", swatch: FENCE_IMG + "corner-joint.jpg", desc: "기둥 양쪽에 끼우는 소형 연결 금구 2개. 코너 틈새는 열린 채로 둠" },
+  { id: "lattice", label: "격자부 코너 부품 (코너 틈새를 격자로 마감)", short: "격자부 코너", swatch: FENCE_IMG + "corner-lattice.jpg", desc: "기둥 높이의 격자 부재로 코너 틈새를 가림 (채광·통풍 유지)" },
+  { id: "privacy", label: "가림 코너 부품 (코너 틈새를 완전히 가림)", short: "가림 코너", swatch: FENCE_IMG + "corner-privacy.jpg", desc: "기둥 높이의 판 부재로 코너 틈새를 완전히 막음 (가림률 최대)" }
 ];
 
 // 다단 프리폴 (알루미늄 컬러, 엔) 과 높이 조합 (카탈로그 P.744~745 센시아용)
@@ -90,9 +90,9 @@ const FENCE_MULTI = {
 
 // 설치 방식. 단단(35각 프리폴)은 셋 중 선택, 다단(60·75각)은 독립 기초만 가능.
 const FENCE_MOUNTS = [
-  { id: "block", label: "기존 담장 위 신설 · 프리폴 앵커를 블록에 매설", short: "담장 위 매설" },
-  { id: "foundation", label: "기초 콘크리트 신설 · 독립 기초에 매설", short: "기초 콘크리트 매설" },
-  { id: "plate", label: "베이스 플레이트 앵커 고정 · 콘크리트 바닥면 (국내 개량형)", short: "베이스 플레이트 앵커" }
+  { id: "block", label: "기존 담장 위 신설 · 프리폴 앵커를 블록에 매설", short: "담장 위 매설", swatch: FENCE_IMG + "free-pole.jpg" },
+  { id: "foundation", label: "기초 콘크리트 신설 · 독립 기초에 매설", short: "기초 콘크리트 매설", swatch: FENCE_IMG + "multi-pole.jpg" },
+  { id: "plate", label: "베이스 플레이트 앵커 고정 · 콘크리트 바닥면 (국내 개량형)", short: "베이스 플레이트 앵커", swatch: FENCE_IMG + "base-plate.jpg" }
 ];
 const FENCE_BASE_PLATE_PER_M = 100000; // 베이스 플레이트(부자재 20,000) + 설치 인건비 70,000 + 경비 10,000 = 1m당 합계
 
@@ -231,6 +231,7 @@ function createFenceConfigurator(cfg) {
     } else {
       fenMountSelect.disabled = false;
     }
+    if (fenMountSelect._swatchSync) fenMountSelect._swatchSync();
     syncMountUi();
     if (fenHint) {
       fenHint.textContent = tiers === 1
@@ -409,6 +410,16 @@ function createFenceConfigurator(cfg) {
       }
     }
 
+    if (mount.id === "plate" && height.tiers === 1) {
+      push({
+        group: "기둥",
+        label: `기둥 베이스 커버 80×80×20 × ${poles}개`,
+        detail: "기둥 하단의 베이스 플레이트·앵커를 덮는 사각 커버. 베이스 플레이트 방식에 함께 공급되어 추가 비용 없음",
+        included: true,
+        image: FENCE_IMG + "pole-cover.jpg"
+      });
+    }
+
     // ---- 코너·엔드
     push({
       group: "연결부품",
@@ -425,7 +436,8 @@ function createFenceConfigurator(cfg) {
       push({
         group: "연결부품",
         label: `${cornerType.short} × 코너 ${corners}곳${height.tiers > 1 ? ` × ${height.tiers}단` : ""}`,
-        detail: `${cornerType.label} · 코너 1곳당 ${formatCurrency(jpyToKrw(perCorner))} (P.741)`,
+        detail: `${cornerType.desc} · 코너 1곳당 ${formatCurrency(jpyToKrw(perCorner))} (P.741)`,
+        image: cornerType.swatch,
         krw: jpyToKrw(perCorner * corners),
         remove: () => porchResetControl(fenCornersInput, "0")
       });
@@ -511,9 +523,12 @@ function createFenceConfigurator(cfg) {
     fenPoleMedia.innerHTML = result.height.tiers > 1
       ? mediaMarkup(FENCE_IMG + "multi-pole.jpg", `${result.height.tiers}단 프리폴 · 독립 기초 시공`)
       : result.mount.id === "plate"
-        ? mediaMarkup(FENCE_IMG + "base-plate.jpg", "베이스 플레이트 (스테인리스) · 프리폴에 끼워 바닥 앵커 고정") + mediaMarkup(FENCE_IMG + "base-plate-side.jpg", "베이스 플레이트 측면 · 1m당 100,000원 (부자재 + 설치 인건비 + 경비)")
+        ? mediaMarkup(FENCE_IMG + "base-plate.jpg", "베이스 플레이트 (스테인리스) · 프리폴에 끼워 바닥 앵커 고정") + mediaMarkup(FENCE_IMG + "base-plate-side.jpg", "베이스 플레이트 측면 · 1m당 100,000원 (부자재 + 설치 인건비 + 경비)") + mediaMarkup(FENCE_IMG + "pole-cover.jpg", "기둥 베이스 커버 80×80×20 · 함께 공급 (추가 비용 없음)")
         : mediaMarkup(FENCE_IMG + "free-pole.jpg", result.mount.id === "block" ? "프리폴 35각 · 기존 담장 위 앵커 매설" : "프리폴 35각 · 신설 기초 콘크리트에 매설");
-    fenOptionMedia.innerHTML = fenLowerCoverToggle.checked ? mediaMarkup(FENCE_IMG + "lower-cover.jpg", "하부 막음 커버 (틈새 55~85mm)") : "";
+    fenOptionMedia.innerHTML = (fenLowerCoverToggle.checked ? mediaMarkup(FENCE_IMG + "lower-cover.jpg", "하부 막음 커버 (틈새 55~85mm)") : "")
+      + (result.cut && result.design.endCover && fenEndCoverToggle.checked ? mediaMarkup(FENCE_IMG + "end-cover.svg", "단부 커버 · 절단면 마감") : "")
+      + (result.height.tiers > 1 && fenGrooveCoverToggle && fenGrooveCoverToggle.checked ? mediaMarkup(FENCE_IMG + "groove-cover.jpg", "다단 프리폴 홈 커버") : "")
+      + (result.corners > 0 ? mediaMarkup(result.cornerType.swatch, `${result.cornerType.short} · ${result.cornerType.desc}`) : "");
   }
 
   function renderFence() {
@@ -555,8 +570,11 @@ function createFenceConfigurator(cfg) {
     }
     fenTiersSelect.innerHTML = option(1, "단단 (패널 1장, H06~H12)") + option(2, "2단 (패널 2장 상하 조합, 전고 ~3.1m)") + option(3, "3단 (패널 3장, 전고 ~3.7m)");
     fenCornerTypeSelect.innerHTML = FENCE_CORNER_TYPES.map((item) => option(item.id, item.label)).join("");
+    createSwatchPicker(fenCornerTypeSelect, FENCE_CORNER_TYPES);
     fenWindSelect.innerHTML = FENCE_WIND.map((item) => option(item.id, item.label)).join("");
     fenMountSelect.innerHTML = FENCE_MOUNTS.map((item) => option(item.id, item.label)).join("");
+    createSwatchPicker(fenMountSelect, FENCE_MOUNTS);
+    bindHoverPreviews(fenForm);
     fenBaseRateInput.value = String(FENCE_BASE_PLATE_PER_M);
     fenCustomOptions.innerHTML = Array.from({ length: PORCH_CUSTOM_OPTION_COUNT }, (_, index) => `
       <div class="porch-option-row" data-porch-option>
