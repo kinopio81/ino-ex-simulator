@@ -1,6 +1,6 @@
 /*
   특별제작품 #6: 천본격자 휀스 (타카쇼 에버아트우드 휀스 千本格子 시리즈)
-  특별제작품 #7: 에버아트우드 판 붙임 휀스 (縦貼ユニット / 密縦板貼 / こだわり板 — P.816~821, 같은 팩토리로 생성)
+  특별제작품 #7: 에버아트우드 판 붙임 휀스 (세로 판 붙임 / 밀착 세로 판 붙임 / 코다와리 판 — P.816~821, 같은 팩토리로 생성)
   ------------------------------------------------
   데이터 출처 (카탈로그 인쇄 페이지, PDF 텍스트 레이어에서 직접 추출)
     P.798~799 가격 매트릭스 / P.802~803 기둥 일체형(足付) 유닛 30×50 (틈 30·53), 코너 부재, 각도 자재 가림 코너
@@ -194,31 +194,31 @@ function itabariType(def) {
 }
 const ITABARI_TYPES = [
   itabariType({ id: "tate_80_40", label: "세로 판 붙임 80폭+40폭", short: "세로 판 80+40", page: "P.816", unitW: 1000, gap: 10, boards: [80, 40], screen: 85,
-    gapLabel: "80폭·40폭 판 교대 (W1000)", desc: "폭 80과 40의 에버아트우드 평판을 번갈아 세로로 붙인 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    gapLabel: "80폭·40폭 판 교대 (W1000)", desc: "폭 80과 40, 두께 약 11.4mm의 에버아트우드 납작 평판을 번갈아 세로로 붙인 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
     wrap: { 1500: 110000, 1800: 114700, 2000: 164100 } }),
   itabariType({ id: "tate_80_18", label: "세로 판 붙임 80폭+18폭", short: "세로 판 80+18", page: "P.817", unitW: 1000, gap: 10, boards: [80, 18], screen: 80,
-    gapLabel: "80폭·18폭 판 교대 (W1000)", desc: "폭 80 평판 사이에 가는 18폭 판을 끼운 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    gapLabel: "80폭·18폭 판 교대 (W1000)", desc: "폭 80 평판 사이에 가는 18폭 판을 끼운 유닛(두께 약 11.8mm). 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
     wrap: { 1500: 115200, 1800: 119400, 2000: 170000 } }),
   itabariType({ id: "tate_102_40", label: "세로 판 붙임 102폭+40폭", short: "세로 판 102+40", page: "P.817", unitW: 1000, gap: 10, boards: [102, 40], screen: 87,
-    gapLabel: "102폭·40폭 판 교대 (W1000)", desc: "폭 102와 40 평판을 번갈아 붙인 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    gapLabel: "102폭·40폭 판 교대 (W1000)", desc: "폭 102와 40 평판을 번갈아 붙인 유닛(두께 약 12.3mm). 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
     wrap: { 1500: 112400, 1800: 116200, 2000: 168700 } }),
   itabariType({ id: "mitsu_80", label: "밀착 세로 판 붙임 80폭", short: "밀착 80폭", page: "P.818", unitW: 935, gap: 3, boards: [80], screen: 95,
-    gapLabel: "80폭 판 밀착 (W935)", desc: "80폭 평판을 틈 없이 빽빽하게 붙여 면을 강조. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
+    gapLabel: "80폭 판 밀착 (W935)", desc: "80폭 평판을 틈 5mm로 빽빽하게 붙여 면을 강조. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
     wrap: { 1500: 128400, 1800: 131600, 2000: 137900 }, alu: { 1500: 91500, 1800: 94500, 2000: 99200 } }),
   itabariType({ id: "mitsu_40", label: "밀착 세로 판 붙임 40폭", short: "밀착 40폭", page: "P.819", unitW: 900, gap: 3, boards: [40], screen: 90,
-    gapLabel: "40폭 판 밀착 (W900)", desc: "40폭 평판을 틈 없이 붙인 유닛. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
+    gapLabel: "40폭 판 밀착 (W900)", desc: "40폭 평판을 틈 5mm로 붙인 유닛. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
     wrap: { 1500: 136100, 1800: 139300, 2000: 145500 }, alu: { 1500: 94500, 1800: 97600, 2000: 102200 } }),
   itabariType({ id: "mitsu_yamato", label: "밀착 세로 판 붙임 야마토 담", short: "밀착 야마토 담", page: "P.819", unitW: 896, gap: 0, boards: [80, 80], screen: 92, alternate: true,
-    gapLabel: "80폭 판 앞뒤 겹침 (W896)", desc: "판을 앞뒤로 어긋나게 겹쳐 붙인 일본식 담(大和塀) 디자인. 러스티 컬러 + 에코 호랑이 대나무 2색", colors: ["rusty_copper_bamboo", "rusty_dark_bamboo"],
+    gapLabel: "80폭 판 앞뒤 겹침 (W896)", desc: "80폭 판을 앞뒤 두 겹(전체 두께 약 22mm)으로 어긋나게 붙인 일본식 담(야마토 담) 디자인. 러스티 컬러 + 에코 호랑이 대나무 2색", colors: ["rusty_copper_bamboo", "rusty_dark_bamboo"],
     wrap: { 1500: 118400, 1800: 124800, 2000: 135800 } }),
-  itabariType({ id: "kodawari_tate", label: "こだわり板 세로 붙임 유닛", short: "こだわり板 세로 붙임", page: "P.820", unitW: 1000, gap: 40, boards: [112], screen: 82,
-    gapLabel: "こだわり板 112.5폭 (W1000)", desc: "나무 결 요철이 깊은 두꺼운 こだわり板을 세로로 붙인 상위 라인. 전용 외·내코너 부재", colors: ITABARI_KODAWARI_COLORS,
+  itabariType({ id: "kodawari_tate", label: "코다와리 판 세로 붙임 유닛", short: "코다와리 판 세로 붙임", page: "P.820", unitW: 1000, gap: 40, boards: [112], screen: 82,
+    gapLabel: "코다와리 판 100폭 × 두께 25 (W1000)", desc: "나무 결 요철이 깊은 두께 25mm 코다와리 판(프리미엄 두꺼운 판)을 세로로 붙인 상위 라인. 전용 외·내코너 부재", colors: ITABARI_KODAWARI_COLORS,
     wrap: { 1500: 103600, 1800: 118200, 2000: 141200 }, outerInner: { 1500: 39900, 1800: 46500, 2000: 51200 } }),
-  itabariType({ id: "kodawari_yamato", label: "こだわり板 야마토 담 유닛", short: "こだわり 야마토 담", page: "P.821", unitW: 1000, gap: 0, boards: [100, 100], screen: 90, alternate: true,
-    gapLabel: "こだわり板 앞뒤 겹침 (W1000)", desc: "こだわり板을 앞뒤로 겹친 야마토 담. 갓 부재에 こだわり 장인 대나무 사용. 전용 외·내코너 부재", colors: ["brown_ebony", "dark_pine", "black_ebony"],
+  itabariType({ id: "kodawari_yamato", label: "코다와리 판 야마토 담 유닛", short: "코다와리 판 야마토 담", page: "P.821", unitW: 1000, gap: 0, boards: [100, 100], screen: 90, alternate: true,
+    gapLabel: "코다와리 판 앞뒤 겹침 (W1000)", desc: "두께 25mm 코다와리 판을 앞뒤로 어긋나게 겹친 야마토 담. 갓 부재에 코다와리 장인 대나무 사용. 전용 외·내코너 부재", colors: ["brown_ebony", "dark_pine", "black_ebony"],
     wrap: { 1500: 115000, 1800: 124800, 2000: 152900 }, outerInner: { 1500: 43200, 1800: 49700, 2000: 52800 } }),
-  itabariType({ id: "kodawari_roji", label: "こだわり板 골목 담(路地塀) 유닛", short: "こだわり 골목 담", page: "P.821", unitW: 993, gap: 0, boards: [150], screen: 100,
-    gapLabel: "150폭 판 완전 밀착 (W993)", desc: "가림률 100%의 완전 차폐형. 전용 외·내코너 부재", colors: ["dark_pine", "brown_ebony", "black_ebony"],
+  itabariType({ id: "kodawari_roji", label: "코다와리 판 골목 담 유닛", short: "코다와리 판 골목 담", page: "P.821", unitW: 993, gap: 0, boards: [150], screen: 100,
+    gapLabel: "150폭 × 두께 30 판 완전 밀착 (W993)", desc: "두께 30mm 코다와리 판을 틈 없이 붙인 가림률 100% 완전 차폐형(골목 담). 전용 외·내코너 부재", colors: ["dark_pine", "brown_ebony", "black_ebony"],
     wrap: { 1500: 156000, 1800: 180400, 2000: 196700 }, outerInner: { 1500: 51300, 1800: 59400, 2000: 65900 } })
 ];
 
