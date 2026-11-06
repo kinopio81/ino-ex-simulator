@@ -83,6 +83,7 @@ const productImages = {
   "홈야드루프Ⅱ": "assets/options/homeyard-roof.jpg",
   "홈야드루프 글라스 시스템": "assets/options/porch-glass.jpg",
   "에버아트 우드 / EVERART WOOD": "assets/products/image38.png",
+  "천본격자 휀스": "assets/senbon/ashitsuki.jpg",
   "센시아 휀스": "assets/fence/sensia-hpanel.jpg",
   "센시아 휀스R": "assets/fence/sensiaR-hpanel.jpg",
   "센시아 휀스 / 세로 가는 격자": "assets/products/sensia-fence-vertical.png",
@@ -141,6 +142,7 @@ const proposalCaseImages = {
   "홈야드루프 글라스 시스템": ["assets/cases/case-40-1.png", "assets/cases/case-40-2.png"],
   "에버아트 보드 / EVERART BOARD": ["assets/cases/case-42-1.png", "assets/cases/case-42-2.png"],
   "에버아트 우드 / EVERART WOOD": ["assets/cases/case-43-1.png", "assets/cases/case-43-2.png"],
+  "천본격자 휀스": ["assets/senbon/unit.jpg", "assets/senbon/reversible.jpg"],
   "센시아 휀스": ["assets/fence/sensia-louver.jpg", "assets/fence/sensia-combi.jpg"],
   "센시아 휀스R": ["assets/fence/sensiaR-hpanel.jpg", "assets/fence/sensiaR-combi.jpg"],
   "센시아 휀스 / 세로 가는 격자": ["assets/cases/case-45-2.png"],
@@ -762,7 +764,7 @@ function getProposalInsights() {
   const hasSeating = quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치"));
   const hasWoodcrete = quoteItems.some((item) => item.name.includes("우드크리트"));
   const hasLighting = quoteItems.some((item) => item.category.includes("LED조명"));
-  const hasFence = quoteItems.some((item) => item.name.includes("센시아 휀스"));
+  const hasFence = quoteItems.some((item) => /센시아 휀스|천본격자/.test(item.name));
   const hasWallMaterial = quoteItems.some((item) => item.name.includes("에버아트") || item.name.includes("노보월") || item.name.includes("스테가월"));
   const hasStone = quoteItems.some((item) => item.category.includes("조경석"));
   const hasMailOrSign = quoteItems.some((item) => item.category.includes("우체통") || item.category.includes("명패"));
@@ -914,7 +916,7 @@ function getProposalMaterialTags() {
   addTag(quoteItems.some((item) => item.name.includes("IKS") || item.name.includes("벤치")), "Outdoor Living");
   addTag(quoteItems.some((item) => item.category.includes("LED조명")), "Low Light");
   addTag(quoteItems.some((item) => item.name.includes("우드") || item.name.includes("우드크리트")), "Warm Texture");
-  addTag(quoteItems.some((item) => item.name.includes("센시아 휀스")), "Soft Boundary");
+  addTag(quoteItems.some((item) => /센시아 휀스|천본격자/.test(item.name)), "Soft Boundary");
   addTag(quoteItems.some((item) => item.category.includes("조경석")), "Natural Aggregate");
 
   return tags.slice(0, 6);

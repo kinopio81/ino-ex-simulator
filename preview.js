@@ -440,18 +440,19 @@ function fenceSvg(model) {
   const defs = [];
   const tiers = model.tiers.slice();
   const spans = Math.max(1, model.spans);
-  const lastW = model.cut ? model.lastW : 2000;
+  const spanW = model.spanW || 2000;
+  const lastW = model.cut ? model.lastW : spanW;
   // 스팬이 많으면 앞 5칸 + 생략 표시 + 뒤 2칸만 그린다
   const MAX_DRAW = 7;
   const compact = spans > MAX_DRAW;
   const segments = []; // { w: mm, index, cut }
   if (compact) {
-    for (let i = 0; i < 5; i += 1) segments.push({ w: 2000, index: i });
-    segments.push({ gap: true, w: 700 });
-    segments.push({ w: 2000, index: spans - 2 });
+    for (let i = 0; i < 5; i += 1) segments.push({ w: spanW, index: i });
+    segments.push({ gap: true, w: Math.max(400, spanW * 0.35) });
+    segments.push({ w: spanW, index: spans - 2 });
     segments.push({ w: lastW, index: spans - 1, cut: model.cut });
   } else {
-    for (let i = 0; i < spans; i += 1) segments.push({ w: i === spans - 1 ? lastW : 2000, index: i, cut: i === spans - 1 && model.cut });
+    for (let i = 0; i < spans; i += 1) segments.push({ w: i === spans - 1 ? lastW : spanW, index: i, cut: i === spans - 1 && model.cut });
   }
   const drawnLen = segments.reduce((sum, seg) => sum + seg.w, 0);
   const Htot = model.totalHeightMm;
@@ -504,16 +505,35 @@ function fenceSvg(model) {
   const drawPanel = (xPx, wPx, bottomMm, hMm, isCut) => {
     const top = Y(bottomMm + hMm);
     const hPx = hMm * s;
+    const p = model.pattern;
+    // 천본격자류: 상하 가로대 틀 없이 세로 격자가 동연(가로대) 앞에 서는 구조
+    const senbonLike = p === "senbon" || p === "facade" || p === "baroque";
     let out = "";
-    // 프레임(상하 가로대 + 세로틀)
-    out += rect(xPx, top, wPx, hPx, `fill="${bg}" stroke="${model.frameHex}" stroke-width="1"`);
-    const innerTop = top + RAIL * s;
-    const innerH = (hMm - RAIL * 2) * s;
+    if (!senbonLike) out += rect(xPx, top, wPx, hPx, `fill="${bg}" stroke="${model.frameHex}" stroke-width="1"`);
+    const innerTop = senbonLike ? top : top + RAIL * s;
+    const innerH = senbonLike ? hPx : (hMm - RAIL * 2) * s;
     const clipId = `${uid}-c${Math.round(xPx)}-${Math.round(top)}`;
     defs.push(`<clipPath id="${clipId}"><rect x="${xPx.toFixed(1)}" y="${innerTop.toFixed(1)}" width="${wPx.toFixed(1)}" height="${innerH.toFixed(1)}"/></clipPath>`);
     let pat = "";
-    const p = model.pattern;
-    if (p === "hpanel" || p === "louver" || p === "combi" || p === "hslim") {
+    if (senbonLike) {
+      const railsN = model.rails || 2;
+      for (let r = 0; r < railsN; r += 1) {
+        const f = railsN === 1 ? 0.5 : 0.12 + 0.76 * r / (railsN - 1);
+        pat += rect(xPx, top + hPx * f - 30 * s, wPx, 60 * s, `fill="${model.frameHex}" opacity="0.5"`);
+      }
+      const gapMm = model.slatGap || 30;
+      const widths = p === "baroque" ? [30, 150, 30, 30, 150, 30, 30] : [model.slatW || 30];
+      const edge = Math.max(0.5, 4 * s);
+      let mm = gapMm / 2;
+      let k = 0;
+      while (mm < wPx / s) {
+        const w = widths[k % widths.length];
+        pat += rect(xPx + mm * s, top, w * s, hPx, `fill="${panelFill}"`);
+        pat += rect(xPx + (mm + w) * s - edge, top, edge, hPx, `fill="rgba(0,0,0,0.2)"`);
+        mm += w + gapMm;
+        k += 1;
+      }
+    } else if (p === "hpanel" || p === "louver" || p === "combi" || p === "hslim") {
       const pitch = p === "hslim" ? 32 : 100;
       for (let mm = 0; mm < hMm - RAIL * 2 + pitch; mm += pitch) {
         const yTop = innerTop + mm * s;
@@ -537,9 +557,10 @@ function fenceSvg(model) {
       }
     }
     out += `<g clip-path="url(#${clipId})">${pat}</g>`;
-    // 상하 가로대
-    out += rect(xPx, top, wPx, RAIL * s, `fill="${model.frameHex}"`);
-    out += rect(xPx, top + hPx - RAIL * s, wPx, RAIL * s, `fill="${model.frameHex}"`);
+    if (!senbonLike) {
+      out += rect(xPx, top, wPx, RAIL * s, `fill="${model.frameHex}"`);
+      out += rect(xPx, top + hPx - RAIL * s, wPx, RAIL * s, `fill="${model.frameHex}"`);
+    }
     if (isCut) {
       out += line(xPx + wPx - 1, top - 4, xPx + wPx - 1, top + hPx + 4, `stroke="#b03a2c" stroke-width="1.4" stroke-dasharray="4 3"`);
     }
@@ -570,7 +591,7 @@ function fenceSvg(model) {
   };
 
   // 단 배치: 바닥에서 A=80mm 띄우고, 단 사이 12mm
-  const A = tiers[0] === 540 && tiers.length === 1 ? 60 : 80;
+  const A = model.bottomGap != null ? model.bottomGap : (tiers[0] === 540 && tiers.length === 1 ? 60 : 80);
   const tierBottoms = [];
   let cursor = A;
   tiers.forEach((h) => { tierBottoms.push(cursor); cursor += h + 12; });
@@ -606,7 +627,7 @@ function fenceSvg(model) {
   body += line(X(0), dimY - 5, X(0), dimY + 5, `stroke="#8a8f8c" stroke-width="0.8"`);
   body += line(X(drawnLen), dimY - 5, X(drawnLen), dimY + 5, `stroke="#8a8f8c" stroke-width="0.8"`);
   body += text(X(drawnLen / 2), dimY + 14, `총 길이 ${previewNumber(model.lengthMm)}`, `text-anchor="middle" font-size="11" font-weight="600" fill="#3f4542"`);
-  body += text(X(drawnLen / 2), dimY + 26, `2,000 스팬 × ${model.cut ? spans - 1 : spans}${model.cut ? ` + 절단 ${previewNumber(model.lastW)}` : ""} · 기둥 ${model.poles}본${model.pitch1000 ? " (심간 1,000)" : ""}`, `text-anchor="middle" font-size="9" fill="#5f594f"`);
+  body += text(X(drawnLen / 2), dimY + 26, `${previewNumber(spanW)} 스팬 × ${model.cut ? spans - 1 : spans}${model.cut ? ` + 절단 ${previewNumber(model.lastW)}` : ""} · 기둥 ${model.poles}본${model.pitch1000 ? " (심간 1,000)" : ""}`, `text-anchor="middle" font-size="9" fill="#5f594f"`);
   // 치수: 전고 + 단별 패널 높이
   const hx = X(drawnLen) + 22;
   body += line(hx, Y(Htot), hx, groundY, `stroke="#8a8f8c" stroke-width="0.8" stroke-dasharray="3 2"`);

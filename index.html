@@ -61,7 +61,7 @@
           <button class="mode-card" type="button" role="tab" aria-selected="false" data-builder-mode="special">
             <span class="mode-card__eyebrow">특별 주문 제품</span>
             <strong>인디오더 제품 구성</strong>
-            <small>올글라스포치Ⅱ · 홈야드루프Ⅱ · 홈야드루프 글라스 시스템 · 센시아 휀스 / 휀스R을 치수와 옵션으로 구성해 견적합니다.</small>
+            <small>올글라스포치Ⅱ · 홈야드루프Ⅱ · 홈야드루프 글라스 시스템 · 센시아 휀스 / 휀스R · 천본격자 휀스를 치수와 옵션으로 구성해 견적합니다.</small>
           </button>
         </div>
 
@@ -1003,6 +1003,108 @@
             </aside>
           </div>
 
+          <div class="porch-layout" id="snbConfigurator" hidden>
+            <div class="porch-dock" id="snbDock" hidden>
+              <button class="porch-dock__toggle" type="button" aria-expanded="true" aria-controls="snbDockBody">
+                <span class="porch-dock__title">구성 미리보기</span>
+                <span class="porch-dock__summary"></span>
+                <span class="porch-dock__chevron" aria-hidden="true"></span>
+              </button>
+              <div class="porch-dock__body" id="snbDockBody"></div>
+            </div>
+            <form class="porch-form" id="snbForm" autocomplete="off">
+              <section class="porch-section">
+                <h4>유닛 종류 · 색상 <small>에버아트우드 천본격자 7종 유닛 · 래핑 컬러와 알루미늄 컬러(스텐컬러)로 가격이 나뉩니다 (카탈로그 P.802~814)</small></h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>유닛 종류</span>
+                    <select id="snbType"></select>
+                  </label>
+                  <label class="field">
+                    <span>격자 틈</span>
+                    <select id="snbGap"></select>
+                  </label>
+                  <label class="field">
+                    <span>색상</span>
+                    <select id="snbColor"></select>
+                  </label>
+                </div>
+                <p class="porch-hint" id="snbHint"></p>
+                <div class="porch-media-row" id="snbTypeMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>규격 <small>유닛 폭으로 스팬 수를 나누고 기본형·추가형, 기둥, 코너 부재를 자동 산출합니다</small></h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>높이</span>
+                    <select id="snbHeight"></select>
+                  </label>
+                  <label class="field">
+                    <span>총 길이 (mm)</span>
+                    <input id="snbLength" type="text" inputmode="numeric" value="6000">
+                  </label>
+                  <label class="field">
+                    <span>코너 수 (곳)</span>
+                    <input id="snbCorners" type="text" inputmode="numeric" value="0">
+                  </label>
+                  <label class="field" id="snbCornerTypeField">
+                    <span>코너 부재</span>
+                    <select id="snbCornerType"></select>
+                  </label>
+                  <label class="field" id="snbWallBracketField" hidden>
+                    <span>벽부착 금구 (개)</span>
+                    <input id="snbWallBracket" type="text" inputmode="numeric" value="0">
+                  </label>
+                </div>
+              </section>
+
+              <section class="porch-section">
+                <h4>시공비 · 추가 옵션</h4>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="snbInstallToggle" type="checkbox" checked>
+                    <span>시공비 포함</span>
+                  </label>
+                </div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>시공비 · 1m당 (원) — 부자재 15,000 + 설치 인건비 100,000 + 경비 15,000</span>
+                    <input id="snbInstallRate" type="text" inputmode="numeric">
+                  </label>
+                </div>
+                <div class="porch-custom">
+                  <span class="porch-custom__label">추가 옵션 수동 입력 (원화)</span>
+                  <div id="snbCustomOptions"></div>
+                </div>
+              </section>
+            </form>
+
+            <aside class="porch-result">
+              <div class="porch-preview" id="snbPreview" hidden></div>
+              <div class="porch-result__spec">
+                <span>적용 규격</span>
+                <strong id="snbSpecSummary"></strong>
+              </div>
+              <div class="porch-warning" id="snbWarning" hidden></div>
+              <table class="porch-breakdown">
+                <thead>
+                  <tr>
+                    <th>구성 항목</th>
+                    <th>금액</th>
+                  </tr>
+                </thead>
+                <tbody id="snbBreakdown"></tbody>
+              </table>
+              <div class="porch-result__totals">
+                <div><span>자재 구성 합계</span><strong id="snbTotalKrw">0원</strong></div>
+                <div><span>시공비</span><strong id="snbInstallKrw">0원</strong></div>
+                <div class="is-accent"><span>최종 견적가</span><strong id="snbGrandTotal">0원</strong></div>
+              </div>
+              <button class="primary-button" id="snbAddButton" type="button">구성 그대로 장바구니에 담기</button>
+            </aside>
+          </div>
+
         </section>
       </section>
 
@@ -1123,5 +1225,6 @@
   <script src="glassporch.js"></script>
   <script src="homeyardroof.js"></script>
   <script src="fence.js"></script>
+  <script src="senbon.js"></script>
 </body>
 </html>
