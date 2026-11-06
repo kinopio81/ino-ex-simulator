@@ -61,7 +61,7 @@
           <button class="mode-card" type="button" role="tab" aria-selected="false" data-builder-mode="special">
             <span class="mode-card__eyebrow">특별 주문 제품</span>
             <strong>인디오더 제품 구성</strong>
-            <small>올글라스포치Ⅱ · 홈야드루프Ⅱ · 홈야드루프 글라스 시스템 · 센시아 휀스 / 휀스R · 천본격자 휀스를 치수와 옵션으로 구성해 견적합니다.</small>
+            <small>올글라스포치Ⅱ · 홈야드루프Ⅱ · 홈야드루프 글라스 시스템 · 센시아 휀스 / 휀스R · 천본격자 휀스 · 판 붙임 휀스를 치수와 옵션으로 구성해 견적합니다.</small>
           </button>
         </div>
 
@@ -1102,6 +1102,108 @@
                 <div class="is-accent"><span>최종 견적가</span><strong id="snbGrandTotal">0원</strong></div>
               </div>
               <button class="primary-button" id="snbAddButton" type="button">구성 그대로 장바구니에 담기</button>
+            </aside>
+          </div>
+
+          <div class="porch-layout" id="itbConfigurator" hidden>
+            <div class="porch-dock" id="itbDock" hidden>
+              <button class="porch-dock__toggle" type="button" aria-expanded="true" aria-controls="itbDockBody">
+                <span class="porch-dock__title">구성 미리보기</span>
+                <span class="porch-dock__summary"></span>
+                <span class="porch-dock__chevron" aria-hidden="true"></span>
+              </button>
+              <div class="porch-dock__body" id="itbDockBody"></div>
+            </div>
+            <form class="porch-form" id="itbForm" autocomplete="off">
+              <section class="porch-section">
+                <h4>유닛 종류 · 색상 <small>에버아트우드 평판을 세로로 붙인 판 붙임 9종 · 세로 판 붙임 / 밀착 세로 판 붙임 / こだわり板 (카탈로그 P.816~821)</small></h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>유닛 종류</span>
+                    <select id="itbType"></select>
+                  </label>
+                  <label class="field">
+                    <span>판 배열</span>
+                    <select id="itbGap"></select>
+                  </label>
+                  <label class="field">
+                    <span>색상</span>
+                    <select id="itbColor"></select>
+                  </label>
+                </div>
+                <p class="porch-hint" id="itbHint"></p>
+                <div class="porch-media-row" id="itbTypeMedia"></div>
+              </section>
+
+              <section class="porch-section">
+                <h4>규격 <small>유닛 폭으로 패널 장수를 나누고 각주(기둥), 엔드캡, 코너 부재를 자동 산출합니다</small></h4>
+                <div class="form-grid porch-form__grid">
+                  <label class="field">
+                    <span>높이</span>
+                    <select id="itbHeight"></select>
+                  </label>
+                  <label class="field">
+                    <span>총 길이 (mm)</span>
+                    <input id="itbLength" type="text" inputmode="numeric" value="6000">
+                  </label>
+                  <label class="field">
+                    <span>코너 수 (곳)</span>
+                    <input id="itbCorners" type="text" inputmode="numeric" value="0">
+                  </label>
+                  <label class="field" id="itbCornerTypeField">
+                    <span>코너 부재</span>
+                    <select id="itbCornerType"></select>
+                  </label>
+                  <label class="field" id="itbWallBracketField" hidden>
+                    <span>벽부착 금구 (개)</span>
+                    <input id="itbWallBracket" type="text" inputmode="numeric" value="0">
+                  </label>
+                </div>
+              </section>
+
+              <section class="porch-section">
+                <h4>시공비 · 추가 옵션</h4>
+                <div class="porch-form__toggles">
+                  <label class="toggle-line">
+                    <input id="itbInstallToggle" type="checkbox" checked>
+                    <span>시공비 포함</span>
+                  </label>
+                </div>
+                <div class="form-grid porch-form__grid porch-form__grid--tight">
+                  <label class="field">
+                    <span>시공비 · 1m당 (원) — 부자재 15,000 + 설치 인건비 100,000 + 경비 15,000</span>
+                    <input id="itbInstallRate" type="text" inputmode="numeric">
+                  </label>
+                </div>
+                <div class="porch-custom">
+                  <span class="porch-custom__label">추가 옵션 수동 입력 (원화)</span>
+                  <div id="itbCustomOptions"></div>
+                </div>
+              </section>
+            </form>
+
+            <aside class="porch-result">
+              <div class="porch-preview" id="itbPreview" hidden></div>
+              <div class="porch-result__spec">
+                <span>적용 규격</span>
+                <strong id="itbSpecSummary"></strong>
+              </div>
+              <div class="porch-warning" id="itbWarning" hidden></div>
+              <table class="porch-breakdown">
+                <thead>
+                  <tr>
+                    <th>구성 항목</th>
+                    <th>금액</th>
+                  </tr>
+                </thead>
+                <tbody id="itbBreakdown"></tbody>
+              </table>
+              <div class="porch-result__totals">
+                <div><span>자재 구성 합계</span><strong id="itbTotalKrw">0원</strong></div>
+                <div><span>시공비</span><strong id="itbInstallKrw">0원</strong></div>
+                <div class="is-accent"><span>최종 견적가</span><strong id="itbGrandTotal">0원</strong></div>
+              </div>
+              <button class="primary-button" id="itbAddButton" type="button">구성 그대로 장바구니에 담기</button>
             </aside>
           </div>
 

@@ -1,5 +1,6 @@
 /*
   특별제작품 #6: 천본격자 휀스 (타카쇼 에버아트우드 휀스 千本格子 시리즈)
+  특별제작품 #7: 에버아트우드 판 붙임 휀스 (縦貼ユニット / 密縦板貼 / こだわり板 — P.816~821, 같은 팩토리로 생성)
   ------------------------------------------------
   데이터 출처 (카탈로그 인쇄 페이지, PDF 텍스트 레이어에서 직접 추출)
     P.798~799 가격 매트릭스 / P.802~803 기둥 일체형(足付) 유닛 30×50 (틈 30·53), 코너 부재, 각도 자재 가림 코너
@@ -163,11 +164,68 @@ const SENBON_TYPES = [
   }
 ];
 
-function senbonAssets(type) {
-  return { photo: `${SENBON_IMG}${type.id}.jpg`, draw: `${SENBON_IMG}${type.id}-draw.jpg` };
+function senbonAssets(type, img = SENBON_IMG) {
+  return { photo: `${img}${type.id}.jpg`, draw: `${img}${type.id}-draw.jpg` };
 }
 
+// ---- 판 붙임 계열 (P.816~821): 모두 격자 유닛과 같은 "패널 + 각주 + 엔드캡" 구조
+const ITABARI_IMG = "assets/itabari/";
+const ITABARI_COLORS = SENBON_COLORS.concat([
+  { id: "rusty_copper_bamboo", label: "러스티 코퍼 + 에코 호랑이 대나무", finish: "wrap", hex: "#7c4a35", swatch: `${ITABARI_IMG}colors/rusty_copper_bamboo.jpg` },
+  { id: "rusty_dark_bamboo", label: "러스티 다크 + 에코 호랑이 대나무", finish: "wrap", hex: "#4a3a30", swatch: `${ITABARI_IMG}colors/rusty_dark_bamboo.jpg` }
+]);
+const ITABARI_POST = { wrap: { 1500: 25200, 1800: 27000, 2000: 27000 }, alu: { 1500: 21700, 1800: 24700, 2000: 24700 } };
+const ITABARI_FREE_CORNER = { wrap: { 1500: 24600, 1800: 28200, 2000: 30600 }, alu: { 1500: 22200, 1800: 25800, 2000: 28200 } };
+const ITABARI_TATE_COLORS = ["brown_ebony", "dark_pine", "black_ebony", "natural_pine", "jarrah", "rusty_copper"];
+const ITABARI_MITSU_COLORS = ["brown_ebony", "dark_pine", "black_ebony", "white_pine", "natural_pine", "jarrah", "rusty_copper", "stainless"];
+const ITABARI_KODAWARI_COLORS = ["brown_ebony", "dark_pine", "black_ebony", "natural_pine", "jarrah", "rusty_copper"];
+function itabariType(def) {
+  const gap = { id: "std", label: def.gapLabel, unitW: def.unitW, gap: def.gap, screen: def.screen, light: 100 - def.screen, vent: 100 - def.screen };
+  return {
+    id: def.id, label: def.label, short: def.short, page: def.page, kind: "panelPost", pattern: "boards",
+    boardWidths: def.boards, gapMm: def.gap, postSize: 50, alternateTone: !!def.alternate,
+    desc: def.desc, gaps: [gap], heights: [1500, 1800, 2000], colors: def.colors,
+    prices: { std: { wrap: def.wrap, alu: def.alu || {} } },
+    post: ITABARI_POST, endCap: 3700, wallBracket: 3300,
+    corner: def.outerInner
+      ? { outer: { wrap: def.outerInner, alu: {} }, inner: { wrap: def.outerInner, alu: {} }, free: ITABARI_FREE_CORNER }
+      : { free: ITABARI_FREE_CORNER }
+  };
+}
+const ITABARI_TYPES = [
+  itabariType({ id: "tate_80_40", label: "세로 판 붙임 80폭+40폭", short: "세로 판 80+40", page: "P.816", unitW: 1000, gap: 10, boards: [80, 40], screen: 85,
+    gapLabel: "80폭·40폭 판 교대 (W1000)", desc: "폭 80과 40의 에버아트우드 평판을 번갈아 세로로 붙인 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    wrap: { 1500: 110000, 1800: 114700, 2000: 164100 } }),
+  itabariType({ id: "tate_80_18", label: "세로 판 붙임 80폭+18폭", short: "세로 판 80+18", page: "P.817", unitW: 1000, gap: 10, boards: [80, 18], screen: 80,
+    gapLabel: "80폭·18폭 판 교대 (W1000)", desc: "폭 80 평판 사이에 가는 18폭 판을 끼운 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    wrap: { 1500: 115200, 1800: 119400, 2000: 170000 } }),
+  itabariType({ id: "tate_102_40", label: "세로 판 붙임 102폭+40폭", short: "세로 판 102+40", page: "P.817", unitW: 1000, gap: 10, boards: [102, 40], screen: 87,
+    gapLabel: "102폭·40폭 판 교대 (W1000)", desc: "폭 102와 40 평판을 번갈아 붙인 유닛. 동연 3본, 래핑 컬러만", colors: ITABARI_TATE_COLORS,
+    wrap: { 1500: 112400, 1800: 116200, 2000: 168700 } }),
+  itabariType({ id: "mitsu_80", label: "밀착 세로 판 붙임 80폭", short: "밀착 80폭", page: "P.818", unitW: 935, gap: 3, boards: [80], screen: 95,
+    gapLabel: "80폭 판 밀착 (W935)", desc: "80폭 평판을 틈 없이 빽빽하게 붙여 면을 강조. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
+    wrap: { 1500: 128400, 1800: 131600, 2000: 137900 }, alu: { 1500: 91500, 1800: 94500, 2000: 99200 } }),
+  itabariType({ id: "mitsu_40", label: "밀착 세로 판 붙임 40폭", short: "밀착 40폭", page: "P.819", unitW: 900, gap: 3, boards: [40], screen: 90,
+    gapLabel: "40폭 판 밀착 (W900)", desc: "40폭 평판을 틈 없이 붙인 유닛. 래핑·알루미늄 컬러", colors: ITABARI_MITSU_COLORS,
+    wrap: { 1500: 136100, 1800: 139300, 2000: 145500 }, alu: { 1500: 94500, 1800: 97600, 2000: 102200 } }),
+  itabariType({ id: "mitsu_yamato", label: "밀착 세로 판 붙임 야마토 담", short: "밀착 야마토 담", page: "P.819", unitW: 896, gap: 0, boards: [80, 80], screen: 92, alternate: true,
+    gapLabel: "80폭 판 앞뒤 겹침 (W896)", desc: "판을 앞뒤로 어긋나게 겹쳐 붙인 일본식 담(大和塀) 디자인. 러스티 컬러 + 에코 호랑이 대나무 2색", colors: ["rusty_copper_bamboo", "rusty_dark_bamboo"],
+    wrap: { 1500: 118400, 1800: 124800, 2000: 135800 } }),
+  itabariType({ id: "kodawari_tate", label: "こだわり板 세로 붙임 유닛", short: "こだわり板 세로 붙임", page: "P.820", unitW: 1000, gap: 40, boards: [112], screen: 82,
+    gapLabel: "こだわり板 112.5폭 (W1000)", desc: "나무 결 요철이 깊은 두꺼운 こだわり板을 세로로 붙인 상위 라인. 전용 외·내코너 부재", colors: ITABARI_KODAWARI_COLORS,
+    wrap: { 1500: 103600, 1800: 118200, 2000: 141200 }, outerInner: { 1500: 39900, 1800: 46500, 2000: 51200 } }),
+  itabariType({ id: "kodawari_yamato", label: "こだわり板 야마토 담 유닛", short: "こだわり 야마토 담", page: "P.821", unitW: 1000, gap: 0, boards: [100, 100], screen: 90, alternate: true,
+    gapLabel: "こだわり板 앞뒤 겹침 (W1000)", desc: "こだわり板을 앞뒤로 겹친 야마토 담. 갓 부재에 こだわり 장인 대나무 사용. 전용 외·내코너 부재", colors: ["brown_ebony", "dark_pine", "black_ebony"],
+    wrap: { 1500: 115000, 1800: 124800, 2000: 152900 }, outerInner: { 1500: 43200, 1800: 49700, 2000: 52800 } }),
+  itabariType({ id: "kodawari_roji", label: "こだわり板 골목 담(路地塀) 유닛", short: "こだわり 골목 담", page: "P.821", unitW: 993, gap: 0, boards: [150], screen: 100,
+    gapLabel: "150폭 판 완전 밀착 (W993)", desc: "가림률 100%의 완전 차폐형. 전용 외·내코너 부재", colors: ["dark_pine", "brown_ebony", "black_ebony"],
+    wrap: { 1500: 156000, 1800: 180400, 2000: 196700 }, outerInner: { 1500: 51300, 1800: 59400, 2000: 65900 } })
+];
+
 function createSenbonConfigurator(cfg) {
+  const TYPES = cfg.types || SENBON_TYPES;
+  const COLORS = cfg.colors || SENBON_COLORS;
+  const IMG = cfg.img || SENBON_IMG;
   const el = (name) => $(`#${cfg.prefix}${name}`);
   const snForm = el("Form");
   const snTypeSelect = el("Type");
@@ -199,10 +257,10 @@ function createSenbonConfigurator(cfg) {
   const option = (value, label) => `<option value="${value}">${escapeHtml(label)}</option>`;
 
   function currentType() {
-    return SENBON_TYPES.find((item) => item.id === snTypeSelect.value) || SENBON_TYPES[0];
+    return TYPES.find((item) => item.id === snTypeSelect.value) || TYPES[0];
   }
   function typeColors(type) {
-    return type.colors ? SENBON_COLORS.filter((c) => type.colors.includes(c.id)) : SENBON_COLORS;
+    return type.colors ? COLORS.filter((c) => type.colors.includes(c.id)) : COLORS;
   }
 
   // 타입이 바뀌면 격자 틈·색상·높이 선택지를 그 타입에 맞게 다시 채운다
@@ -222,6 +280,8 @@ function createSenbonConfigurator(cfg) {
     snColorSelect.value = colors.some((c) => c.id === prevColor) ? prevColor : colors[0].id;
     if (snColorSelect._swatchRebuild) snColorSelect._swatchRebuild(colors);
     if (snCornerTypeField) snCornerTypeField.hidden = !type.corner;
+    // 그 타입에 설정된 코너 부재만 선택지로 (세로 판 붙임·밀착은 각도 자재 가림 코너만)
+    keep(snCornerTypeSelect, SENBON_CORNERS.filter((c) => !type.corner || type.corner[c.id]).map((c) => option(c.id, c.label)).join(""));
     if (snWallBracketField) snWallBracketField.hidden = !type.wallBracket;
     if (snHint) snHint.textContent = `${type.desc} (${type.page})`;
   }
@@ -234,7 +294,7 @@ function createSenbonConfigurator(cfg) {
 
   function calculateSenbon() {
     const type = currentType();
-    const assets = senbonAssets(type);
+    const assets = senbonAssets(type, IMG);
     const gap = type.gaps.find((g) => g.id === snGapSelect.value) || type.gaps[0];
     const color = typeColors(type).find((c) => c.id === snColorSelect.value) || typeColors(type)[0];
     const finish = color.finish;
@@ -244,7 +304,7 @@ function createSenbonConfigurator(cfg) {
     const corners = Math.max(0, Math.round(porchReadNumber(snCornersInput, 0)));
     const cornerType = SENBON_CORNERS.find((c) => c.id === snCornerTypeSelect.value) || SENBON_CORNERS[0];
     const wallBrackets = type.wallBracket ? Math.max(0, Math.round(porchReadNumber(snWallBracketInput, 0))) : 0;
-    const installRate = snInstallToggle.checked ? porchReadNumber(snInstallRateInput, SENBON_INSTALL_PER_M) : 0;
+    const installRate = snInstallToggle.checked ? porchReadNumber(snInstallRateInput, cfg.installPerM || SENBON_INSTALL_PER_M) : 0;
     const warnings = [];
     const lines = [];
     const push = (line) => lines.push({ krw: 0, ...line });
@@ -417,7 +477,7 @@ function createSenbonConfigurator(cfg) {
   function buildSenbonPreviewModel(result) {
     const { type, gap } = result;
     const legend = [
-      `천본격자 · ${type.label}`,
+      `${cfg.seriesName} · ${type.label}`,
       `${result.color.label.replace(/ \(.*\)$/, "")} · ${result.finishLabel}`,
       `H${result.H} · ${gap.label.split(" (")[0]}`,
       result.summaryParts[0],
@@ -428,11 +488,13 @@ function createSenbonConfigurator(cfg) {
     const spans = type.kind === "siteset" ? Math.max(1, Math.round(result.lengthMm / spanW)) : result.spans;
     return {
       kind: "fence",
-      seriesName: "천본격자",
+      seriesName: cfg.seriesName,
       designLabel: type.label,
       pattern: type.pattern,
       slatW: type.slatW,
-      slatGap: gap.gap,
+      boardWidths: type.boardWidths || null,
+      alternateTone: !!type.alternateTone,
+      slatGap: type.gapMm != null ? type.gapMm : gap.gap,
       rails: result.H >= 2400 ? 3 : 2,
       panelHex: result.color.hex,
       frameHex: result.finish === "alu" ? "#9a9590" : result.color.hex,
@@ -454,7 +516,7 @@ function createSenbonConfigurator(cfg) {
       highStrength: false,
       summary: `총 길이 ${formatNumber(result.lengthMm)} × H${result.H} · ${result.summaryParts[0]}`,
       photo: result.assets.photo,
-      photoCaption: `참고 사진 · 천본격자 ${type.label} (카탈로그 ${type.page})`,
+      photoCaption: `참고 사진 · ${cfg.seriesName} ${type.label} (카탈로그 ${type.page})`,
       legend
     };
   }
@@ -491,10 +553,10 @@ function createSenbonConfigurator(cfg) {
   }
 
   function buildSenbonForm() {
-    snTypeSelect.innerHTML = SENBON_TYPES.map((t) => option(t.id, t.label)).join("");
-    createSwatchPicker(snTypeSelect, SENBON_TYPES.map((t) => ({ id: t.id, label: t.label, swatch: senbonAssets(t).draw })));
-    snColorSelect.innerHTML = SENBON_COLORS.map((c) => option(c.id, c.label)).join("");
-    const colorPicker = createSwatchPicker(snColorSelect, SENBON_COLORS);
+    snTypeSelect.innerHTML = TYPES.map((t) => option(t.id, t.label)).join("");
+    createSwatchPicker(snTypeSelect, TYPES.map((t) => ({ id: t.id, label: t.label, swatch: senbonAssets(t, IMG).draw })));
+    snColorSelect.innerHTML = COLORS.map((c) => option(c.id, c.label)).join("");
+    const colorPicker = createSwatchPicker(snColorSelect, COLORS);
     // 타입별 색상 제한: 목록 항목을 숨기는 방식으로 재구성
     snColorSelect._swatchRebuild = (colors) => {
       const allowed = new Set(colors.map((c) => c.id));
@@ -508,7 +570,7 @@ function createSenbonConfigurator(cfg) {
         <input type="text" inputmode="numeric" placeholder="원화 금액" data-porch-option-krw>
       </div>
     `).join("");
-    snInstallRateInput.value = String(SENBON_INSTALL_PER_M);
+    snInstallRateInput.value = String(cfg.installPerM || SENBON_INSTALL_PER_M);
     rebuildDependentOptions();
     snHeightSelect.value = Array.from(snHeightSelect.options).some((o) => o.value === "1800") ? "1800" : snHeightSelect.options[0].value;
     bindHoverPreviews(snForm);
@@ -556,6 +618,7 @@ function createSenbonConfigurator(cfg) {
   renderSenbon();
 }
 
-createSenbonConfigurator({ id: "senbonfence", prefix: "snb", name: "천본격자 휀스", category: "특별제작품 / (천본격자 휀스)", panel: "#snbConfigurator" });
+createSenbonConfigurator({ id: "senbonfence", prefix: "snb", name: "천본격자 휀스", seriesName: "천본격자", category: "특별제작품 / (천본격자 휀스)", panel: "#snbConfigurator" });
+createSenbonConfigurator({ id: "itabarifence", prefix: "itb", name: "에버아트우드 판 붙임 휀스", seriesName: "판 붙임", category: "특별제작품 / (판 붙임 휀스)", panel: "#itbConfigurator", types: ITABARI_TYPES, colors: ITABARI_COLORS, img: ITABARI_IMG });
 buildSpecialProductSelect();
 showSpecialProduct(specialProductSelect.value);

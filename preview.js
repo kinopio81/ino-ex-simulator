@@ -507,7 +507,7 @@ function fenceSvg(model) {
     const hPx = hMm * s;
     const p = model.pattern;
     // 천본격자류: 상하 가로대 틀 없이 세로 격자가 동연(가로대) 앞에 서는 구조
-    const senbonLike = p === "senbon" || p === "facade" || p === "baroque";
+    const senbonLike = p === "senbon" || p === "facade" || p === "baroque" || p === "boards";
     let out = "";
     if (!senbonLike) out += rect(xPx, top, wPx, hPx, `fill="${bg}" stroke="${model.frameHex}" stroke-width="1"`);
     const innerTop = senbonLike ? top : top + RAIL * s;
@@ -522,13 +522,14 @@ function fenceSvg(model) {
         pat += rect(xPx, top + hPx * f - 30 * s, wPx, 60 * s, `fill="${model.frameHex}" opacity="0.5"`);
       }
       const gapMm = model.slatGap || 30;
-      const widths = p === "baroque" ? [30, 150, 30, 30, 150, 30, 30] : [model.slatW || 30];
+      const widths = p === "baroque" ? [30, 150, 30, 30, 150, 30, 30] : (model.boardWidths && model.boardWidths.length ? model.boardWidths : [model.slatW || 30]);
       const edge = Math.max(0.5, 4 * s);
       let mm = gapMm / 2;
       let k = 0;
       while (mm < wPx / s) {
         const w = widths[k % widths.length];
         pat += rect(xPx + mm * s, top, w * s, hPx, `fill="${panelFill}"`);
+        if (model.alternateTone && k % 2) pat += rect(xPx + mm * s, top, w * s, hPx, `fill="rgba(0,0,0,0.22)"`);
         pat += rect(xPx + (mm + w) * s - edge, top, edge, hPx, `fill="rgba(0,0,0,0.2)"`);
         mm += w + gapMm;
         k += 1;
