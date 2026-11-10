@@ -134,6 +134,21 @@ const HYR_ROOF_PREFS = [
 
 const HYR_DEFAULT_INSTALL = 3000000;
 const HYG_GLASS_PER_METER = 1500000; // 홈야드루프 글라스 시스템 유리 단가 (원/m, 면 길이 기준)
+// 홈야드루프 글라스 시스템 면 마감: 없음 / 국내 유리 / 에버아트보드 벽면
+const HYG_FACE_FINISHES = [
+  { id: "none", label: "없음 (개방)", swatch: OPT_IMG + "none.jpg" },
+  { id: "glass", label: "유리 (1m당 1,500,000원)", swatch: OPT_IMG + "porch-glass.jpg" },
+  { id: "board", label: "에버아트보드 벽면 (양면 마감 + 부자재)", swatch: OPT_IMG + "everart-board.jpg" }
+];
+// 에버아트보드 벽면 단가 (사용자 산정표, 원). 보드 910×2440 양면 + 엔드·센터조인트·아웃코너 부자재, 높이 2,500/2,700 동일.
+// 면 길이가 규격 사이면 더 큰 규격을 사서 절단한다. W3,700 초과는 장당 환산액으로 추정.
+const HYG_BOARD_SPECS = [
+  { w: 2400, boards: 6, krw: 2778000 },
+  { w: 3000, boards: 8, krw: 3626000 },
+  { w: 3700, boards: 8, krw: 3626000 }
+];
+const HYG_BOARD_BASE_KRW = 234000; // 엔드·코너 등 고정 부자재 (6장 2,778,000 / 8장 3,626,000 에서 역산)
+const HYG_BOARD_PER_BOARD_KRW = 424000;
 
 function createHyrConfigurator(cfg) {
   const el = (name) => $(`#${cfg.prefix}${name}`);
@@ -263,13 +278,16 @@ function createHyrConfigurator(cfg) {
 
     // ---- 유리 시스템 (홈야드루프 글라스 시스템 전용)
     let glassFaces = [];
+    let boardFaces = [];
     if (cfg.glass) {
-      glassFaces = PORCH_FACES.filter((face) => {
-        const box = hyrGlassFaces.querySelector(`[data-glass-face="${face.id}"]`);
-        return box && box.checked && !(mount === "wall" && face.id === "back");
+      PORCH_FACES.forEach((face) => {
+        const select = hyrGlassFaces.querySelector(`[data-face-finish="${face.id}"]`);
+        const value = select && !(mount === "wall" && face.id === "back") ? select.value : "none";
+        if (value === "glass") glassFaces.push(face);
+        else if (value === "board") boardFaces.push(face);
       });
-      if (!glassFaces.length) {
-        warnings.push("홈야드루프 글라스 시스템은 최소 한 면에 유리를 넣어야 합니다. 유리가 없는 구성은 \"홈야드루프Ⅱ\"를 선택해 주세요.");
+      if (!glassFaces.length && !boardFaces.length) {
+        warnings.push("홈야드루프 글라스 시스템은 최소 한 면에 유리 또는 에버아트보드 벽면을 넣어야 합니다. 면 마감이 없는 구성은 \"홈야드루프Ⅱ\"를 선택해 주세요.");
         return { valid: false, warnings, lines };
       }
       glassFaces.forEach((face) => {
@@ -280,10 +298,47 @@ function createHyrConfigurator(cfg) {
           label: `글라스 시스템 · ${face.label} (${face.axis === "W" ? "폭" : "길이"} ${formatNumber(faceMm)}mm)`,
           detail: `국내 유리 적용 · 1m당 ${formatCurrency(HYG_GLASS_PER_METER)} × ${meters.toFixed(2)}m · 높이 ${formatNumber(reqH)}mm (높이별 단가 차이 없음)`,
           krw: Math.round(meters * HYG_GLASS_PER_METER / 100) * 100,
-          remove: () => porchResetControl(hyrGlassFaces.querySelector(`[data-glass-face="${face.id}"]`), false),
+          remove: () => porchResetControl(hyrGlassFaces.querySelector(`[data-face-finish="${face.id}"]`), "none"),
           image: HYR_IMG + "porch-glass.jpg"
         });
       });
+      boardFaces.forEach((face) => {
+        const faceMm = face.axis === "W" ? reqW : reqL;
+        const spec = HYG_BOARD_SPECS.find((item) => item.w >= faceMm);
+        let boards;
+        let krw;
+        let note;
+        let verify = false;
+        if (spec) {
+          boards = spec.boards;
+          krw = spec.krw;
+          note = spec.w > faceMm ? `W${formatNumber(spec.w)} 규격 부재를 ${formatNumber(faceMm)}mm로 절단` : `W${formatNumber(spec.w)} 규격 그대로`;
+        } else {
+          const perSide = Math.ceil(faceMm / 910);
+          boards = perSide * 2;
+          krw = HYG_BOARD_BASE_KRW + HYG_BOARD_PER_BOARD_KRW * boards;
+          note = `W3,700 규격 초과 → 한 면 ${perSide}장 기준, 장당 ${formatCurrency(HYG_BOARD_PER_BOARD_KRW)} 환산 추정`;
+          verify = true;
+        }
+        push({
+          group: "벽면",
+          label: `에버아트보드 벽면 · ${face.label} (${face.axis === "W" ? "폭" : "길이"} ${formatNumber(faceMm)}mm) · 보드 910×2440 × ${boards}장 (양면)`,
+          detail: `${note} · 엔드·센터조인트·아웃코너 부자재 포함, 실내·실외 양면 시공 · 높이 ${formatNumber(reqH)}mm (높이별 단가 차이 없음)`,
+          krw,
+          verify,
+          remove: () => porchResetControl(hyrGlassFaces.querySelector(`[data-face-finish="${face.id}"]`), "none"),
+          image: HYR_IMG + "everart-board.jpg"
+        });
+      });
+      if (boardFaces.length) {
+        push({
+          group: "벽면",
+          label: "에버아트보드 고정 프레임 자재 · 별도 필요",
+          detail: "보드를 고정하는 프레임 자재비는 아트보드 + 부자재 단가에 포함되지 않습니다 (+@)",
+          separate: true
+        });
+        if (reqH > 2700) warnings.push("에버아트보드 벽면 단가는 높이 2,500·2,700(보드 2,440) 기준입니다. 높이 3,000은 보드 길이와 단가 확인이 필요합니다.");
+      }
     }
 
     // ---- 내천정
@@ -418,7 +473,7 @@ function createHyrConfigurator(cfg) {
     hyrReadCustomOptions().forEach((option) => push({ group: "옵션", label: option.label, detail: "수동 입력 옵션", krw: option.krw, remove: () => porchClearCustomOption(option.row) }));
 
     const materialKrw = lines.reduce((sum, line) => sum + (line.separate ? 0 : line.krw), 0);
-    return { valid: true, warnings, lines, pick, specLabel, glassFaces, mount, roof, color, reqW, reqL, reqH, materialKrw, installFee, total: materialKrw + installFee };
+    return { valid: true, warnings, lines, pick, specLabel, glassFaces, boardFaces, mount, roof, color, reqW, reqL, reqH, materialKrw, installFee, total: materialKrw + installFee };
   }
 
   function renderHyrMedia(result) {
@@ -432,13 +487,18 @@ function createHyrConfigurator(cfg) {
     hyrShadeColorSelect.closest(".field").hidden = hyrShadeSelect.value !== "canvas";
     hyrSpacerToggle.closest(".toggle-line").hidden = hyrMountSelect.value !== "wall";
     if (cfg.glass) {
-      const backBox = hyrGlassFaces.querySelector('[data-glass-face="back"]');
+      const backSelect = hyrGlassFaces.querySelector('[data-face-finish="back"]');
       const wallMount = hyrMountSelect.value === "wall";
-      backBox.disabled = wallMount;
-      if (wallMount) backBox.checked = false;
-      backBox.closest(".toggle-line").classList.toggle("is-disabled", wallMount);
-      const faces = result.valid ? result.glassFaces : [];
-      hyrGlassMedia.innerHTML = faces.length ? mediaMarkup(HYR_IMG + "porch-glass.jpg", `유리 시스템 · ${faces.map((face) => face.label).join("·")}`) : "";
+      if (backSelect) {
+        backSelect.disabled = wallMount;
+        if (wallMount) backSelect.value = "none";
+        if (backSelect._swatchSync) backSelect._swatchSync();
+        backSelect.closest(".field").classList.toggle("is-attached", wallMount);
+      }
+      const glass = result.valid ? result.glassFaces : [];
+      const boards = result.valid ? result.boardFaces : [];
+      hyrGlassMedia.innerHTML = (glass.length ? mediaMarkup(HYR_IMG + "porch-glass.jpg", `유리 시스템 · ${glass.map((face) => face.label).join("·")}`) : "")
+        + (boards.length ? mediaMarkup(HYR_IMG + "everart-board.jpg", `에버아트보드 벽면 (양면) · ${boards.map((face) => face.label).join("·")}`) : "");
     }
     void result;
   }
@@ -480,11 +540,13 @@ function createHyrConfigurator(cfg) {
     const movingPosts = Math.max(0, Math.round(porchReadNumber(hyrMovingPostInput, 0)));
     const lightingFace = hyrLightingFaceToggle.checked && !!HYR_LIGHTING_FACE[result.pick.wKey];
     const glassIds = result.glassFaces.map((face) => face.id);
+    const boardIds = (result.boardFaces || []).map((face) => face.id);
     const faces = {};
     PORCH_FACES.forEach((face) => {
       faces[face.id] = {
         label: face.label,
-        finish: wallMount && face.id === "back" ? "building" : glassIds.includes(face.id) ? "glass" : "open",
+        swatch: OPT_IMG + "everart-board.jpg",
+        finish: wallMount && face.id === "back" ? "building" : glassIds.includes(face.id) ? "glass" : boardIds.includes(face.id) ? "wall" : "open",
         panels: Math.max(2, Math.round((face.axis === "W" ? result.reqW : result.reqL) / 700)),
         flap: "none",
         curtain: null,
@@ -496,7 +558,7 @@ function createHyrConfigurator(cfg) {
     const glassCount = glassIds.length;
     if (cfg.glass) {
       const byCount = { 1: ["agp-attached-1face", "유리 1면 (카탈로그 P.1126)"], 2: ["agp-attached-2face", "유리 2면 (카탈로그 P.1129)"], 3: ["agp-wall-3glass", "유리 3면 (카탈로그 P.1127)"], 4: ["agp-all4-night", "유리 4면 (카탈로그 P.1129)"] };
-      const pick = byCount[Math.min(4, Math.max(1, glassCount))];
+      const pick = glassCount ? byCount[Math.min(4, glassCount)] : ["agp-wall-openfront", "에버아트보드 벽면 구성 (카탈로그 P.1126)"];
       photo = PREVIEW_IMG + pick[0] + ".jpg";
       photoCaption = `참고 사진 · 올글라스포치 ${pick[1]} 시공 예와 유사한 구성`;
     } else if (shade) {
@@ -518,6 +580,7 @@ function createHyrConfigurator(cfg) {
     const legend = [
       `${wallMount ? "벽부착형" : "독립형"} · ${spec.label}`,
       glassCount ? `유리 ${glassCount}면 (${result.glassFaces.map((face) => face.label).join("·")})` : "",
+      boardIds.length ? `아트보드 벽면 ${boardIds.length}면 (${result.boardFaces.map((face) => face.label).join("·")})` : "",
       hasCeiling ? `내천정 ${grade.label.replace("에버아트보드 ", "")} · ${ceilingColor.label}` : "",
       lineLight ? "라인라이트" : "",
       downlights ? `다운라이트 ${downlights}개` : "",
@@ -561,7 +624,7 @@ function createHyrConfigurator(cfg) {
       hyrAddButton.disabled = true;
       return;
     }
-    hyrSpecSummary.textContent = `폭 ${formatNumber(result.reqW)} × 길이 ${formatNumber(result.reqL)} × 높이 ${formatNumber(result.reqH)}mm → ${result.specLabel}${result.glassFaces.length ? ` · 유리 ${result.glassFaces.map((face) => face.label).join('·')}` : ""}`;
+    hyrSpecSummary.textContent = `폭 ${formatNumber(result.reqW)} × 길이 ${formatNumber(result.reqL)} × 높이 ${formatNumber(result.reqH)}mm → ${result.specLabel}${result.glassFaces.length ? ` · 유리 ${result.glassFaces.map((face) => face.label).join('·')}` : ""}${result.boardFaces && result.boardFaces.length ? ` · 아트보드 ${result.boardFaces.map((face) => face.label).join('·')}` : ""}`;
     hyrLastLines = result.lines;
     hyrBreakdown.innerHTML = porchBreakdownRows(result.lines);
     hyrTotalKrw.textContent = formatCurrency(result.materialKrw);
@@ -598,9 +661,17 @@ function createHyrConfigurator(cfg) {
     `).join("");
     hyrInstallFeeInput.value = String(cfg.defaultInstall);
     if (cfg.glass) {
+      const option = (value, label) => `<option value="${value}">${escapeHtml(label)}</option>`;
       hyrGlassFaces.innerHTML = PORCH_FACES.map((face) => `
-        <label class="toggle-line"><input type="checkbox" data-glass-face="${face.id}"${face.id === "front" ? " checked" : ""}><span>${face.label} <small>(${face.axis === "W" ? "폭" : "길이"} 기준)</small></span></label>
+        <label class="field">
+          <span>${face.label} (${face.axis === "W" ? "폭" : "길이"} 기준)</span>
+          <select data-face-finish="${face.id}">${HYG_FACE_FINISHES.map((item) => option(item.id, item.label)).join("")}</select>
+        </label>
       `).join("");
+      hyrGlassFaces.querySelectorAll("[data-face-finish]").forEach((select) => {
+        select.value = select.dataset.faceFinish === "front" ? "glass" : "none";
+        createSwatchPicker(select, HYG_FACE_FINISHES);
+      });
     }
     hyrPanelQtyInput.value = "0";
     hyrMovingPostInput.value = "0";
@@ -618,6 +689,7 @@ function createHyrConfigurator(cfg) {
       `폭 ${formatNumber(result.reqW)} × 길이 ${formatNumber(result.reqL)} × 높이 ${formatNumber(result.reqH)}mm`,
       result.specLabel,
       result.glassFaces.length ? `유리 ${result.glassFaces.map((face) => face.label).join("·")}` : "",
+      result.boardFaces && result.boardFaces.length ? `아트보드 ${result.boardFaces.map((face) => face.label).join("·")}` : "",
       result.color.label.replace(/ \(.*\)$/, ""),
       result.roof.label.replace(/ \(.*\)$/, "")
     ].filter(Boolean);
