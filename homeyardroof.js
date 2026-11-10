@@ -545,7 +545,8 @@ function createHyrConfigurator(cfg) {
     PORCH_FACES.forEach((face) => {
       faces[face.id] = {
         label: face.label,
-        swatch: OPT_IMG + "everart-board.jpg",
+        swatch: ceilingColor.swatch,
+        wallLabel: "에버아트보드 벽면 (양면)",
         finish: wallMount && face.id === "back" ? "building" : glassIds.includes(face.id) ? "glass" : boardIds.includes(face.id) ? "wall" : "open",
         panels: Math.max(2, Math.round((face.axis === "W" ? result.reqW : result.reqL) / 700)),
         flap: "none",

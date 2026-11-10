@@ -175,7 +175,7 @@ function previewSvg(model) {
       }
       out += polygon(quad(0, 1, H - 110, H), `fill="${frameHex}"`);
       out += polygon(quad(0, 1, 0, 110), `fill="${frameHex}"`);
-      labels.push("벽면세트 · 에버아트보드");
+      labels.push(face.wallLabel || "벽면세트 · 에버아트보드");
     } else if (face.finish === "slideTextile" || face.finish === "slideBoard") {
       // 슬라이드스크린: 상부 레일에 매단 큰 미닫이 패널 3장. 패널마다 살짝 엇갈려(앞뒤) 겹쳐 보이게 그린다.
       const textile = face.finish === "slideTextile";
